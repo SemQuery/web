@@ -1,0 +1,44 @@
+<script>
+    var WS_ID = "{{ .ws_id }}";
+</script>
+<script src="/js/update.js"></script>
+<div class="query-container ui container" style="margin-left: 10%; margin-right: 10%">
+    <div class="ui one column centered grid">
+        <div class="column">
+            <div align="center">
+                <h1 class="objective">Searching for <code>{{ .query }}</code></h1>
+                {{ if .indexed }}
+                    <p id="query-results">Already indexed</p>
+                {{ else }}
+                    <p id="query-results">Cloning Repository...</p>
+                {{ end }} 
+                <br>
+                
+            </div>
+            <div style="margin: 0 15%">
+                {{ if .indexed }}
+                    <div id="progress-bar" class="ui success progress">
+                        <div id="bar" class="bar" style="width: 100%;">
+                            <div id="progress-label" class="progress">100%</div>
+                        </div>
+                        <div class="label">Progress</div>
+                    </div>
+                {{ else }}
+                    <div id="progress-bar" class="ui active progress">
+                        <div id="bar" class="bar" style="width: 0%;">
+                            <div id="progress-label" class="progress">0%</div>
+                        </div>
+                        <div class="label">Progress</div>
+                    </div>
+                {{ end }}
+            </div>
+            <br>
+
+            <div id="search-results">
+                <b><p id="search-res-count"></p></b>
+                <br>
+
+            </div>
+        </div>
+    </div>
+</div>

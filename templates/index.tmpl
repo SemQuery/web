@@ -1,0 +1,28 @@
+{{ template "pattern_bg" }}
+<div class="ui one column centered grid">
+    <div class="valigned">
+        <img src="/images/semquery_logo_shadow.png" class="llogo"></img>
+        <br>
+        <form action="/query" method="POST">
+            
+            <div id="repo-search" class="ui search">
+                <div class="ui icon input">
+                    <input id="repo-input" class="prompt" type="text" placeholder="user/repository"
+                    autocomplete="off" spellcheck="false" autofocus />
+                    <i class="github icon"></i>
+                    <i class="code icon" style="top: 50px"></i>
+                </div>
+            </div>
+            <input id="repo-form-value" type="hidden" name="repo">
+            <input id="query-form-value" type="hidden" name="q">
+        </form>
+        <br>
+        Examples:
+        <ul class="ui list" style="text-shadow: 0px 0px 5px rgba(0, 0, 0, 0.6)">
+            <li><code>field(name: "test")</code></li>
+            <li><code>local_var(type: "byte[]")</code></li>
+            <li><code>class(implements: "Runnable")</code></li>
+        </ul>
+    </div>
+
+</div>

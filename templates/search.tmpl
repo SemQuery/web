@@ -1,0 +1,6 @@
+{{ range $index, $element := .repos }}
+    <div class="ui segment">
+        <h4 class="ui header">{{ $element.name }}</h4>
+        <p>{{ $element.description }}</p>
+    </div>
+{{ end }}

@@ -1,0 +1,7 @@
+<form id="form" method="POST" action="/query">
+    <input type="hidden" name="q" value="{{ .q }}">
+    <input type="hidden" name="repo" value="{{ .repo }}">
+</form>
+<script>
+document.getElementById('form').submit();
+</script>

@@ -1,0 +1,23 @@
+{{ template "pattern_bg" }}
+<div class="ui one column centered grid">
+    <div class="valigned">
+        <p id="message">{{ .message }}</p>
+        <br />
+        <div class="ui icon input">
+            <input id="username" type="text" placeholder="username" />
+        </div>
+        <br /> <br />
+        <div class="ui icon input">
+            <input id="password" type="password" placeholder="password" /> 
+        </div>
+        <br /> <br />
+        <button class="ui secondary button" id="login">Login</button>
+        <br /> <br />
+        <button class="ui secondary button" id="glogin"><i class="github icon"></i>Login with Github</button>
+    </div>
+</div>
+
+<form id="form" action="/login" method="POST">
+    <input id="form-usr" name="username" type="hidden" />
+    <input id="form-pwd" name="password" type="hidden" />
+</form>

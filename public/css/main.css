@@ -1,0 +1,195 @@
+body {
+    /* background-image: url('/images/mosaic_pattern.svg'); */
+}
+
+code {
+    font-family: Monaco, Menlo, monospace;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+#repo-search {
+    overflow: hidden;
+    font-size: 1.3em;
+}
+
+#repo-search input {
+    width: 450px;
+}
+
+#repo-search .icon {
+    font-size: 1.4em;
+}
+
+.navigation {
+    position: relative;
+    z-index: 2;
+    background-color: white !important;
+    margin-top: 0 !important;
+}
+
+.one {
+    position: relative;
+}
+
+.llogo {
+    max-width: 37.5%;
+    max-height: 30%;
+    margin-bottom: 20px;
+}
+
+.valigned {
+    color: white;
+    z-index: 1;
+    margin-top: 45vmin;
+    margin-top: calc(50vmin - 170px);
+}
+
+.main-search {
+}
+
+.stxt {
+    font-family: "Monaco", "Menlo", monospace !important;
+}
+
+.logo {
+    margin-left: 7px;
+    margin-top: 7px;
+}
+
+.sbtn {
+    margin-right: 10px
+}
+
+.picture {
+    left: 7px;
+    top: 7px;
+}
+
+.account {
+    left: 5px;
+}
+
+#collapse-search {
+    display: none;
+}
+
+.query-container {
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+    margin-top: 40px;
+    margin-right: 10% !important;
+    margin-left: 10% !important;
+    background-color: white;
+}
+
+.query-results {
+    font-size: 40px !important;
+}
+
+#bar {
+    transition-duration: 300ms;
+}
+
+#query-results {
+    margin-top: 35px;
+    font-size: 2em;
+}
+
+#query-results > b {
+    font-size: 1.5em;
+}
+
+.codeview {
+    margin: 0 auto;
+    width: 100%;
+    
+    border: 1px solid #ddd; 
+}
+
+#search-results {
+    width: 75%;
+    margin: 0 auto;
+}
+
+th, td {
+    font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 13px;
+    line-height: 1.4;
+} 
+
+.linenum {
+    width: 35px;
+    padding-left: 5px;
+}
+
+.linenum:before {
+    content: attr(data-line-number);
+}
+
+table td + td {
+    border-left: 1px solid #ddd;
+}
+
+.number {
+    color: rgba(0, 0, 0, 0.3);
+}
+
+.inline {
+    color: #333;
+}
+
+pre {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.objective {
+    font-size: 2.5em;
+}
+
+.objective code {
+    font-size: 0.8em;
+    background-color: #eee;
+    border-radius: 3px;
+}
+
+#pattern-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.highlight {
+    font-weight: bold;
+    display: inline-block;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    background-color: #FFFFA4;
+}
+
+.filename {
+    border: 1px solid #ddd;
+    border-bottom-width: 0;
+    padding: 5px;
+    background-color: #F5F5F5;
+}
+
+.pathsegment {
+    display: inline-block;
+}
+
+.codeline {
+}
+
+.codeline pre {
+    font-family: Consolas, Menlo, monospace;
+}
+
+.codeline:hover {
+    background-color: #F7F7F7;
+}
+
+.codeline:hover .highlight {
+    background-color: #EFEFA8;
+}

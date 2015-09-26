@@ -1,5 +1,4 @@
 window.onload = function() {
-
     var expanded = false;
     var input = $('#repo-input');
     input.keydown(function(event) {

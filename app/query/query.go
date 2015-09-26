@@ -30,13 +30,7 @@ func QueryPage(user common.User, r render.Render, req *http.Request) {
     id := rand.Int63()
     data["ws_id"] = id
     ws_transfer[id] = []string{req.FormValue("q"), req.FormValue("repo")}
-    log.Println("Hello", req.FormValue("q"), req.FormValue("repo"))
 
-    file1 := []string{"foo", "bar", "baz"}
-    file2 := []string{"a", "b", "c"}
-    files := [][]string{file1, file2}
-
-    data["files"] = files
 
     path := "_repos/" + req.FormValue("repo")
 
@@ -97,6 +91,7 @@ func SocketPage(r *http.Request, w http.ResponseWriter) {
     }
 
     path := "_repos/" + repo
+    executable := common.Config.EngineExecutable
 
     if _, err := os.Stat(path); os.IsNotExist(err) {
         os.MkdirAll(path, 0777)
@@ -104,7 +99,7 @@ func SocketPage(r *http.Request, w http.ResponseWriter) {
         c.Run()
         c.Wait()
 
-        cmd := exec.Command("java", "-jar", "/Users/August/Code/projects/semquery/engine/target/engine-1.0-SNAPSHOT.jar", "index", path, repo)
+        cmd := exec.Command("java", "-jar", executable, "index", path, repo)
 
         cmdReader, _ := cmd.StdoutPipe()
 
@@ -120,7 +115,7 @@ func SocketPage(r *http.Request, w http.ResponseWriter) {
     }
 
 
-    cmd := exec.Command("java", "-jar", "/Users/August/Code/projects/semquery/engine/target/engine-1.0-SNAPSHOT.jar", "query", query, repo)
+    cmd := exec.Command("java", "-jar", executable, "query", query, repo)
 
     cmdReader, _ := cmd.StdoutPipe()
 
@@ -155,7 +150,7 @@ func SocketPage(r *http.Request, w http.ResponseWriter) {
     }()
     cmd.Wait()
 
-    log.Print("DONE WITH INDEXING!")
+    log.Print("Finished indexing.")
 }
 
 // Extracts the lines encapsulating characters in

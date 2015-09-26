@@ -14,6 +14,8 @@ type config struct {
 
     OAuth2Client_ID string `json:"github_id"`
     OAuth2Client_Secret string `json:"github_secret"`
+
+    EngineExecutable string `json:"engine_executable"`
 }
 
 var Config *config = &config{}

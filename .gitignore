@@ -5,3 +5,7 @@ pkg/
 _repos/
 
 config.json
+
+# gulp stuff
+node_modules/
+public/

@@ -1,6 +1,8 @@
 package main
 
 import (
+    "github.com/semquery/web/app/common"
+
     "github.com/go-martini/martini"
     "github.com/martini-contrib/sessions"
     "github.com/martini-contrib/render"
@@ -54,7 +56,7 @@ func main() {
     m.Use(render.Renderer(render.Options {
         Layout: "layout",
     }))
-    m.Use(UserInject)
+    m.Use(common.UserInject)
 
     RegisterHandlers(m)
 

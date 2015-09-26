@@ -1,6 +1,8 @@
 package main
 
 import (
+    "github.com/semquery/web/app/common"
+
     "os"
     "log"
     "strings"
@@ -43,7 +45,7 @@ func RegisterHandlers(m *martini.ClassicMartini) {
     m.Get("/cextension", ExtensionPage)
 }
 
-func CreateData(user User, session sessions.Session) map[string]interface{} {
+func CreateData(user common.User, session sessions.Session) map[string]interface{} {
     data := map[string]interface{} {
         "loggedin": strconv.FormatBool(user.IsLoggedIn()),
         "message": "",
@@ -61,13 +63,13 @@ func CreateData(user User, session sessions.Session) map[string]interface{} {
 }
 
 //Rendering home page with template data
-func RootPage(user User, r render.Render) {
+func RootPage(user common.User, r render.Render) {
     data := CreateData(user, nil)
     r.HTML(200, "index", data)
 }
 
 //Retrieves github repository to prepare to be indexed and searched
-func CacheRepository(user User, req *http.Request, ren render.Render) {
+func CacheRepository(user common.User, req *http.Request, ren render.Render) {
     if user.IsLoggedIn() {
         query := req.URL.Query().Get("query")
         if query != "" {
@@ -83,7 +85,7 @@ func CacheRepository(user User, req *http.Request, ren render.Render) {
 var ws_transfer = map[int64][]string{}
 
 //Rendering search page with template data
-func QueryPage(user User, r render.Render, req *http.Request) {
+func QueryPage(user common.User, r render.Render, req *http.Request) {
     data := CreateData(user, nil)
 
     req.ParseForm()
@@ -278,13 +280,13 @@ func LogoutAction(session sessions.Session, re render.Render) {
     re.Redirect("/")
 }
 
-func AlreadyLogRedirect(re render.Render, user User) {
+func AlreadyLogRedirect(re render.Render, user common.User) {
     if user.IsLoggedIn() {
         re.Redirect("/")
     }
 }
 
-func LoginPage(user User, session sessions.Session, re render.Render) {
+func LoginPage(user common.User, session sessions.Session, re render.Render) {
     template := CreateData(user, session)
 
     re.HTML(200, "login", template)
@@ -325,7 +327,7 @@ func LoginAction(session sessions.Session, r *http.Request, re render.Render) {
     re.Redirect("/login")
 }
 
-func RegisterPage(user User, session sessions.Session, re render.Render) {
+func RegisterPage(user common.User, session sessions.Session, re render.Render) {
     template := CreateData(user, session)
 
     re.HTML(200, "register", template)

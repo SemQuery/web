@@ -22,7 +22,7 @@ window.onload = function() {
             input.attr('placeholder', 'enter semantic query');
             expanded = true;
 
-            input.attr('style', 'font-family: Consolas, monospace; font-size: 25px;');
+            input.attr('style', 'font-family: Consolas, monospace !important; font-size: 25px;');
             event.preventDefault();
 
             animateBG(0.7);

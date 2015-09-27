@@ -1,9 +1,65 @@
-body {
-    /* background-image: url('/images/mosaic_pattern.svg'); */
+$font-stack: 'Source Sans Pro', Helvetica, arial, sans-serif;
+$code-font-stack: Consolas, Menlo, monospace !important;
+
+body, input, .ui, h1, h2, h3, h4, h5 {
+    font-family: $font-stack !important;
+}
+
+.ui.menu-transparent {
+    background-color: rgba(0, 0, 0, 0.12) !important;
+}
+
+.ui.menu-transparent .item {
+    color: white;
+}
+
+.ui.menu-transparent .image {
+    -webkit-filter: invert(100%);
+}
+
+.main-content {
+    text-align: center;
+    height: 100%;
+    margin: 0 !important;
+}
+
+.home-background-slate {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    background: rgba(26,67,173,1) !important;
+    background: -moz-linear-gradient(-45deg, rgba(26,67,173,1) 0%, rgba(177,150,141,1) 69%, rgba(214,171,133,1) 86%) !important;
+    background: -webkit-gradient(left top, right bottom, color-stop(0%, rgba(26,67,173,1)), color-stop(69%, rgba(177,150,141,1)), color-stop(86%, rgba(214,171,133,1))) !important;
+    background: -webkit-linear-gradient(-45deg, rgba(26,67,173,1) 0%, rgba(177,150,141,1) 69%, rgba(214,171,133,1) 86%) !important;
+    background: -o-linear-gradient(-45deg, rgba(26,67,173,1) 0%, rgba(177,150,141,1) 69%, rgba(214,171,133,1) 86%) !important;
+    background: -ms-linear-gradient(-45deg, rgba(26,67,173,1) 0%, rgba(177,150,141,1) 69%, rgba(214,171,133,1) 86%) !important;
+    background: linear-gradient(135deg, rgba(26,67,173,1) 0%, rgba(177,150,141,1) 69%, rgba(214,171,133,1) 86%) !important;
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1a43ad', endColorstr='#d6ab85', GradientType=1 ) !important;
+    box-shadow: inset 0px 0px 200px 0px rgba(0, 0, 0, 0.25);
+}
+
+.about-segment {
+    padding: 40px 0 !important;
+    background-color: black;
+    text-align: center;
+}
+
+.columns-desc {
+    display: inline !important;
+}
+
+.jumbo-text {
+    font-size: 4em;
+}
+
+.light-text {
+    font-weight: 100;
 }
 
 code {
-    font-family: Monaco, Menlo, monospace;
+    font-family: $code-font-stack;
     font-weight: bold;
     font-size: 16px;
 }
@@ -49,7 +105,7 @@ code {
 }
 
 .stxt {
-    font-family: "Monaco", "Menlo", monospace !important;
+    font-family: $code-font-stack;
 }
 
 .logo {
@@ -113,7 +169,7 @@ code {
 }
 
 th, td {
-    font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-family: $code-font-stack;
     font-size: 13px;
     line-height: 1.4;
 } 
@@ -183,7 +239,7 @@ pre {
 }
 
 .codeline pre {
-    font-family: Consolas, Menlo, monospace;
+    font-family: $code-font-stack;
 }
 
 .codeline:hover {

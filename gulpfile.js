@@ -2,11 +2,13 @@ var gulp = require('gulp'),
     concat = require('gulp-concat'),
     rename = require('gulp-rename'),
     uglify = require('gulp-uglify'),
-    minify_css = require('gulp-minify-css');
+    minify_css = require('gulp-minify-css'),
+    sass = require('gulp-sass');
 
 var paths = {
     js: ['assets/js/**/*.js'],
     css: ['assets/css/**/*.css'],
+    scss: ['assets/css/**/*.scss'],
     images: [
         'assets/images/semquery_logo_shadow.png',
         'assets/images/tiled_carets.svg',
@@ -28,9 +30,9 @@ gulp.task('js', function() {
 });
 
 gulp.task('css', function() {
-    return gulp.src(paths.css)
+    return gulp.src(paths.scss)
+        .pipe(sass({outputStyle: 'compressed'}))
         .pipe(concat('all.css'))
-        .pipe(minify_css())
         .pipe(gulp.dest(dests.css));
 });
 

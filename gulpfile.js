@@ -12,7 +12,9 @@ var paths = {
     images: [
         'assets/images/semquery_logo_shadow.png',
         'assets/images/tiled_carets.svg',
-        'assets/images/logo.png'
+        'assets/images/logo.png',
+        'assets/images/code_pages.svg',
+        'assets/images/code_pages_query.svg'
     ]
 };
 

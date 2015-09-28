@@ -10,3 +10,6 @@ config.json
 # gulp stuff
 node_modules/
 public/
+
+# binary media files
+illustrator/

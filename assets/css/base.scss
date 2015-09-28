@@ -44,18 +44,45 @@ body, input, .ui, h1, h2, h3, h4, h5 {
     padding: 40px 0 !important;
     background-color: black;
     text-align: center;
+background: rgba(179,227,198,1);
+background: -moz-linear-gradient(-45deg, rgba(179,227,198,1) 0%, rgba(158,65,32,1) 69%, rgba(163,24,24,1) 86%, rgba(163,24,24,1) 100%);
+background: -webkit-gradient(left top, right bottom, color-stop(0%, rgba(179,227,198,1)), color-stop(69%, rgba(158,65,32,1)), color-stop(86%, rgba(163,24,24,1)), color-stop(100%, rgba(163,24,24,1)));
+background: -webkit-linear-gradient(-45deg, rgba(179,227,198,1) 0%, rgba(158,65,32,1) 69%, rgba(163,24,24,1) 86%, rgba(163,24,24,1) 100%);
+background: -o-linear-gradient(-45deg, rgba(179,227,198,1) 0%, rgba(158,65,32,1) 69%, rgba(163,24,24,1) 86%, rgba(163,24,24,1) 100%);
+background: -ms-linear-gradient(-45deg, rgba(179,227,198,1) 0%, rgba(158,65,32,1) 69%, rgba(163,24,24,1) 86%, rgba(163,24,24,1) 100%);
+background: linear-gradient(135deg, rgba(179,227,198,1) 0%, rgba(158,65,32,1) 69%, rgba(163,24,24,1) 86%, rgba(163,24,24,1) 100%);
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b3e3c6', endColorstr='#a31818', GradientType=1 );
 }
 
 .columns-desc {
     display: inline !important;
 }
 
+.columns-desc p {
+    text-align: left;
+}
+
 .jumbo-text {
     font-size: 4em;
 }
 
+.large-text {
+    font-size: 3em;
+}
+
 .light-text {
     font-weight: 100;
+}
+
+.code-well {
+    font-family: $code-font-stack;
+    font-size: 2em;
+    padding: 10px;
+    background-color: #3A3C3E;
+    border-radius: 14px;
+    box-shadow: inset 0px 0px 18px rgba(27, 28, 29, 0.3);
+    text-shadow: 2px 2px #191919;
+    white-space: pre;
 }
 
 code {

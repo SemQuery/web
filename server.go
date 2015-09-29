@@ -47,6 +47,10 @@ func main() {
 
     routes.RegisterRoutes(m)
 
-    m.Run()
+    if len(os.Args) > 1 {
+        m.RunOnAddr(os.Args[1])
+    } else {
+        m.Run()
+    }
 }
 

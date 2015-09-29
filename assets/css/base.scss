@@ -1,5 +1,4 @@
-$font-stack: 'Source Sans Pro', Helvetica, arial, sans-serif;
-$code-font-stack: Consolas, Menlo, monospace !important;
+@import "vars";
 
 body, input, .ui, h1, h2, h3, h4, h5 {
     font-family: $font-stack !important;
@@ -15,43 +14,6 @@ body, input, .ui, h1, h2, h3, h4, h5 {
 
 .ui.menu-transparent .image {
     -webkit-filter: invert(100%);
-}
-
-.main-content {
-    text-align: center;
-    height: 100%;
-    margin: 0 !important;
-}
-
-.home-background-slate {
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    background: rgba(26,67,173,1) !important;
-    background: -moz-linear-gradient(-45deg, rgba(26,67,173,1) 0%, rgba(177,150,141,1) 69%, rgba(214,171,133,1) 86%) !important;
-    background: -webkit-gradient(left top, right bottom, color-stop(0%, rgba(26,67,173,1)), color-stop(69%, rgba(177,150,141,1)), color-stop(86%, rgba(214,171,133,1))) !important;
-    background: -webkit-linear-gradient(-45deg, rgba(26,67,173,1) 0%, rgba(177,150,141,1) 69%, rgba(214,171,133,1) 86%) !important;
-    background: -o-linear-gradient(-45deg, rgba(26,67,173,1) 0%, rgba(177,150,141,1) 69%, rgba(214,171,133,1) 86%) !important;
-    background: -ms-linear-gradient(-45deg, rgba(26,67,173,1) 0%, rgba(177,150,141,1) 69%, rgba(214,171,133,1) 86%) !important;
-    background: linear-gradient(135deg, rgba(26,67,173,1) 0%, rgba(177,150,141,1) 69%, rgba(214,171,133,1) 86%) !important;
-    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1a43ad', endColorstr='#d6ab85', GradientType=1 ) !important;
-    box-shadow: inset 0px 0px 200px 0px rgba(0, 0, 0, 0.25);
-}
-
-.about-segment {
-    padding: 40px 0 !important;
-    background-color: black;
-    text-align: center;
-background: rgba(179,227,198,1);
-background: -moz-linear-gradient(-45deg, rgba(179,227,198,1) 0%, rgba(158,65,32,1) 69%, rgba(163,24,24,1) 86%, rgba(163,24,24,1) 100%);
-background: -webkit-gradient(left top, right bottom, color-stop(0%, rgba(179,227,198,1)), color-stop(69%, rgba(158,65,32,1)), color-stop(86%, rgba(163,24,24,1)), color-stop(100%, rgba(163,24,24,1)));
-background: -webkit-linear-gradient(-45deg, rgba(179,227,198,1) 0%, rgba(158,65,32,1) 69%, rgba(163,24,24,1) 86%, rgba(163,24,24,1) 100%);
-background: -o-linear-gradient(-45deg, rgba(179,227,198,1) 0%, rgba(158,65,32,1) 69%, rgba(163,24,24,1) 86%, rgba(163,24,24,1) 100%);
-background: -ms-linear-gradient(-45deg, rgba(179,227,198,1) 0%, rgba(158,65,32,1) 69%, rgba(163,24,24,1) 86%, rgba(163,24,24,1) 100%);
-background: linear-gradient(135deg, rgba(179,227,198,1) 0%, rgba(158,65,32,1) 69%, rgba(163,24,24,1) 86%, rgba(163,24,24,1) 100%);
-filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b3e3c6', endColorstr='#a31818', GradientType=1 );
 }
 
 .columns-desc {
@@ -89,19 +51,6 @@ code {
     font-family: $code-font-stack;
     font-weight: bold;
     font-size: 16px;
-}
-
-#repo-search {
-    overflow: hidden;
-    font-size: 1.3em;
-}
-
-#repo-search input {
-    width: 450px;
-}
-
-#repo-search .icon {
-    font-size: 1.4em;
 }
 
 .navigation {
@@ -153,67 +102,6 @@ code {
     left: 5px;
 }
 
-#collapse-search {
-    display: none;
-}
-
-.query-container {
-    border-top-right-radius: 5px;
-    border-top-left-radius: 5px;
-    margin-top: 40px;
-    margin-right: 10% !important;
-    margin-left: 10% !important;
-    background-color: white;
-}
-
-.query-results {
-    font-size: 40px !important;
-}
-
-#bar {
-    transition-duration: 300ms;
-}
-
-#query-results {
-    margin-top: 35px;
-    font-size: 2em;
-}
-
-#query-results > b {
-    font-size: 1.5em;
-}
-
-.codeview {
-    margin: 0 auto;
-    width: 100%;
-    
-    border: 1px solid #ddd; 
-}
-
-#search-results {
-    width: 75%;
-    margin: 0 auto;
-}
-
-th, td {
-    font-family: $code-font-stack;
-    font-size: 13px;
-    line-height: 1.4;
-} 
-
-.linenum {
-    width: 35px;
-    padding-left: 5px;
-}
-
-.linenum:before {
-    content: attr(data-line-number);
-}
-
-table td + td {
-    border-left: 1px solid #ddd;
-}
-
 .number {
     color: rgba(0, 0, 0, 0.3);
 }
@@ -222,57 +110,3 @@ table td + td {
     color: #333;
 }
 
-pre {
-    margin-top: 0;
-    margin-bottom: 0;
-}
-
-.objective {
-    font-size: 2.5em;
-}
-
-.objective code {
-    font-size: 0.8em;
-    background-color: #eee;
-    border-radius: 3px;
-}
-
-#pattern-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-.highlight {
-    font-weight: bold;
-    display: inline-block;
-    padding-top: 2px;
-    padding-bottom: 2px;
-    background-color: #FFFFA4;
-}
-
-.filename {
-    border: 1px solid #ddd;
-    border-bottom-width: 0;
-    padding: 5px;
-    background-color: #F5F5F5;
-}
-
-.pathsegment {
-    display: inline-block;
-}
-
-.codeline {
-}
-
-.codeline pre {
-    font-family: $code-font-stack;
-}
-
-.codeline:hover {
-    background-color: #F7F7F7;
-}
-
-.codeline:hover .highlight {
-    background-color: #EFEFA8;
-}

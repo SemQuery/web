@@ -1,0 +1,113 @@
+@import "vars";
+
+.query-container {
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+    margin-top: 40px;
+    margin-right: 10% !important;
+    margin-left: 10% !important;
+    background-color: white;
+}
+
+.query-results {
+    font-size: 40px !important;
+}
+
+#bar {
+    transition-duration: 300ms;
+}
+
+#query-results {
+    margin-top: 35px;
+    font-size: 2em;
+}
+
+#query-results > b {
+    font-size: 1.5em;
+}
+
+.codeview {
+    margin: 0 auto;
+    width: 100%;
+    
+    border: 1px solid #ddd; 
+}
+
+#search-results {
+    width: 75%;
+    margin: 0 auto;
+}
+
+th, td {
+    font-family: $code-font-stack;
+    font-size: 13px;
+    line-height: 1.4;
+} 
+
+.linenum {
+    width: 35px;
+    padding-left: 5px;
+}
+
+.linenum:before {
+    content: attr(data-line-number);
+}
+
+table td + td {
+    border-left: 1px solid #ddd;
+}
+
+pre {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.objective {
+    font-size: 2.5em;
+}
+
+.objective code {
+    font-size: 0.8em;
+    background-color: #eee;
+    border-radius: 3px;
+}
+
+#pattern-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.highlight {
+    font-weight: bold;
+    display: inline-block;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    background-color: #FFFFA4;
+}
+
+.filename {
+    border: 1px solid #ddd;
+    border-bottom-width: 0;
+    padding: 5px;
+    background-color: #F5F5F5;
+}
+
+.pathsegment {
+    display: inline-block;
+}
+
+.codeline {
+}
+
+.codeline pre {
+    font-family: $code-font-stack;
+}
+
+.codeline:hover {
+    background-color: #F7F7F7;
+}
+
+.codeline:hover .highlight {
+    background-color: #EFEFA8;
+}

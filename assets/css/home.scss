@@ -1,4 +1,5 @@
 @import "vars";
+@import "_mixins";
 
 
 .main-content {
@@ -21,7 +22,7 @@
     background: -ms-linear-gradient(-45deg, rgba(26,67,173,1) 0%, rgba(177,150,141,1) 69%, rgba(214,171,133,1) 86%) !important;
     background: linear-gradient(135deg, rgba(26,67,173,1) 0%, rgba(177,150,141,1) 69%, rgba(214,171,133,1) 86%) !important;
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#1a43ad', endColorstr='#d6ab85', GradientType=1 ) !important;
-    box-shadow: inset 0px 0px 200px 0px rgba(0, 0, 0, 0.25);
+    @include box-shadow(0px, 0px, 200px, rgba(0, 0, 0, 0.25), inset);
 }
 
 .about-segment {
@@ -55,3 +56,27 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b3e3c6', end
     display: none;
 }
 
+.explain-phase-container {
+    display: inline-block;
+}
+
+.explain-phase {
+    display: inline-block;
+}
+
+.explain-phase i.icon {
+    font-size: 2em;
+}
+.explain-phase.phase-1, .explain-phase.phase-3 {
+    width: 200px;
+}
+
+.explain-phase.phase-2 {
+    margin: 0 50px;
+    height: 200px;
+    vertical-align: middle;
+}
+
+.explain-phase img {
+    max-height: 200px;
+}

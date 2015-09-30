@@ -13,18 +13,12 @@ import (
     "encoding/json"
 
     "gopkg.in/mgo.v2"
+
+    "github.com/aws/aws-sdk-go/aws"
+    "github.com/aws/aws-sdk-go/service/sqs"
 )
 
-func main() {
-    cfg, err := os.Open("config.json")
-    if err != nil {
-        log.Fatal(err)
-    }
-    parser := json.NewDecoder(cfg)
-    if err = parser.Decode(common.Config); err != nil {
-        log.Fatal(err)
-    }
-
+func initDB() {
     session, err := mgo.DialWithInfo(&mgo.DialInfo{
         Addrs: []string{common.Config.DBAddr},
         Database: common.Config.DBName,
@@ -37,6 +31,37 @@ func main() {
 
     common.Database = session.DB(common.Config.DBName)
     log.Print("Database online")
+}
+
+func initQueue() {
+    common.Queue = sqs.New(&aws.Config{
+        Region: common.Config.QueueRegion,
+    })
+
+    input := sqs.GetQueueURLInput{
+        QueueName: &common.Config.QueueName,
+    }
+    output, err := common.Queue.GetQueueURL(&input)
+    if err != nil {
+        log.Fatal(err)
+    }
+    common.QueueURL = *output.QueueURL
+}
+
+
+func main() {
+    cfg, err := os.Open("config.json")
+    if err != nil {
+        log.Fatal(err)
+    }
+    parser := json.NewDecoder(cfg)
+    if err = parser.Decode(common.Config); err != nil {
+        log.Fatal(err)
+    }
+
+    initDB()
+    initQueue()
+
 
     m := martini.Classic()
     m.Use(sessions.Sessions("semquery", sessions.NewCookieStore([]byte("secret"))))

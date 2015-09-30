@@ -1,4 +1,5 @@
-window.onload = function() {
+window.addEventListener("load", function() {
+    if (typeof WS_ID === "undefined") return;
     var url = 'ws://localhost:3000/socket';
     var socket = new WebSocket(url);
 
@@ -31,7 +32,7 @@ window.onload = function() {
             pBar.setAttribute("class", cssClasses + " success");
         }
     }
-}
+});
 
 function populateCode(json) {
     console.log(json);

@@ -1,6 +1,9 @@
 package main
 
 import (
+    "github.com/semquery/web/app/common"
+    "github.com/semquery/web/app/routes"
+
     "github.com/go-martini/martini"
     "github.com/martini-contrib/sessions"
     "github.com/martini-contrib/render"
@@ -10,21 +13,41 @@ import (
     "encoding/json"
 
     "gopkg.in/mgo.v2"
+
+    "github.com/aws/aws-sdk-go/aws"
+    "github.com/aws/aws-sdk-go/service/sqs"
 )
 
-var config struct {
-    WebAddr string `json:"web_addr"`
+func initDB() {
+    session, err := mgo.DialWithInfo(&mgo.DialInfo{
+        Addrs: []string{common.Config.DBAddr},
+        Database: common.Config.DBName,
+        Username: common.Config.DBUser,
+        Password: common.Config.DBPass,
+    })
+    if err != nil {
+        log.Fatal(err)
+    }
 
-    DBAddr string `json:"db_addr"`
-    DBName string `json:"db_name"`
-    DBUser string `json:"db_user"`
-    DBPass string `json:"db_pass"`
-
-    OAuth2Client_ID string `json:"github_id"`
-    OAuth2Client_Secret string `json:"github_secret"`
+    common.Database = session.DB(common.Config.DBName)
+    log.Print("Database online")
 }
 
-var database *mgo.Database
+func initQueue() {
+    common.Queue = sqs.New(&aws.Config{
+        Region: common.Config.QueueRegion,
+    })
+
+    input := sqs.GetQueueURLInput{
+        QueueName: &common.Config.QueueName,
+    }
+    output, err := common.Queue.GetQueueURL(&input)
+    if err != nil {
+        log.Fatal(err)
+    }
+    common.QueueURL = *output.QueueURL
+}
+
 
 func main() {
     cfg, err := os.Open("config.json")
@@ -32,32 +55,27 @@ func main() {
         log.Fatal(err)
     }
     parser := json.NewDecoder(cfg)
-    if err = parser.Decode(&config); err != nil {
-        log.Fatal("Bad json")
-    }
-
-    session, err := mgo.DialWithInfo(&mgo.DialInfo{
-        Addrs: []string{config.DBAddr},
-        Database: config.DBName,
-        Username: config.DBUser,
-        Password: config.DBPass,
-    })
-    if err != nil {
+    if err = parser.Decode(common.Config); err != nil {
         log.Fatal(err)
     }
 
-    database = session.DB(config.DBName)
-    log.Print("Database online")
+    initDB()
+    initQueue()
+
 
     m := martini.Classic()
     m.Use(sessions.Sessions("semquery", sessions.NewCookieStore([]byte("secret"))))
     m.Use(render.Renderer(render.Options {
         Layout: "layout",
     }))
-    m.Use(UserInject)
+    m.Use(common.UserInject)
 
-    RegisterHandlers(m)
+    routes.RegisterRoutes(m)
 
-    m.Run()
+    if len(os.Args) > 1 {
+        m.RunOnAddr(os.Args[1])
+    } else {
+        m.Run()
+    }
 }
 

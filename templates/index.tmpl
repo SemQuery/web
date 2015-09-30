@@ -1,5 +1,5 @@
-{{ template "pattern_bg" }}
-<div class="ui one column centered grid">
+<div class="home-background-slate"></div>
+<div class="main-content ui page grid">
     <div class="valigned">
         <img src="/images/semquery_logo_shadow.png" class="llogo"></img>
         <br>
@@ -17,12 +17,63 @@
             <input id="query-form-value" type="hidden" name="q">
         </form>
         <br>
-        Examples:
-        <ul class="ui list" style="text-shadow: 0px 0px 5px rgba(0, 0, 0, 0.6)">
-            <li><code>field(name: "test")</code></li>
-            <li><code>local_var(type: "byte[]")</code></li>
-            <li><code>class(implements: "Runnable")</code></li>
-        </ul>
+        <div class="explain-phase-container">
+            <div class="explain-phase phase-1">
+                <img src="/images/code_pages.svg">
+            </div>
+            <div class="explain-phase phase-2">
+                <span>
+                    <i class="arrow right icon"></i>
+                    <code class="code-well">definition(name: "db_provider")</code>
+                    <i class="arrow right icon"></i>
+                </span>
+            </div>
+            <div class="explain-phase phase-3">
+                <img src="/images/code_pages_query.svg">
+            </div>
+        </div>
     </div>
-
+</div>
+<div class="ui inverted vertical segment about-segment">
+    <h1 class="jumbo-text light-text">Semantic Code Search</h1>
+    <div class="ui grid columns-desc">
+        <div class="mobile column four wide">
+            <h2 class="light-text">Accurate</h2>
+            <p>
+                Construct more accurate and descriptive
+                queries than text or regex-based search.
+            </p>
+        </div>
+        <div class="mobile column four wide">
+            <h2 class="light-text">Language Agnostic</h2>
+            <p>
+                Search across multiple languages
+                with a single query.
+            </p>
+        </div>
+        <div class="mobile column four wide">
+            <h2 class="light-text">Comprehensive</h2>
+            <p>
+                SemQuery lets you search any syntax element
+                through full parsing of source files.
+            </p>
+        </div>
+        <!-- TODO fix ugliness: -->
+        <br>
+        <br>
+        <br>
+        <div class="column six wide">
+            <img src="/images/code_pages.svg" width="75%">
+        </div>
+        <div class="column right-column six wide" style="padding-top: 135px">
+            <h1 class="large-text light-text">Navigate large codebases quickly.</h1>
+        </div>
+        <br>
+        <div class="column left-column six wide" style="padding-top: 135px">
+            <h1 class="large-text light-text">Insert catchphrase here.</h1>
+        </div>
+        <div class="column six wide">
+            <img src="/images/code_pages_query.svg" width="60%">
+        </div>
+    </div>
 </div>

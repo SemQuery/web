@@ -1,3 +1,4 @@
+bin/
 src/
 pkg/
 *.swp
@@ -5,3 +6,10 @@ pkg/
 _repos/
 
 config.json
+
+# gulp stuff
+node_modules/
+public/
+
+# binary media files
+illustrator/

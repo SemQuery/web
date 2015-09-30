@@ -1,78 +1,4 @@
-body {
-    /* background-image: url('/images/mosaic_pattern.svg'); */
-}
-
-code {
-    font-family: Monaco, Menlo, monospace;
-    font-weight: bold;
-    font-size: 16px;
-}
-
-#repo-search {
-    overflow: hidden;
-    font-size: 1.3em;
-}
-
-#repo-search input {
-    width: 450px;
-}
-
-#repo-search .icon {
-    font-size: 1.4em;
-}
-
-.navigation {
-    position: relative;
-    z-index: 2;
-    background-color: white !important;
-    margin-top: 0 !important;
-}
-
-.one {
-    position: relative;
-}
-
-.llogo {
-    max-width: 37.5%;
-    max-height: 30%;
-    margin-bottom: 20px;
-}
-
-.valigned {
-    color: white;
-    z-index: 1;
-    margin-top: 45vmin;
-    margin-top: calc(50vmin - 170px);
-}
-
-.main-search {
-}
-
-.stxt {
-    font-family: "Monaco", "Menlo", monospace !important;
-}
-
-.logo {
-    margin-left: 7px;
-    margin-top: 7px;
-}
-
-.sbtn {
-    margin-right: 10px
-}
-
-.picture {
-    left: 7px;
-    top: 7px;
-}
-
-.account {
-    left: 5px;
-}
-
-#collapse-search {
-    display: none;
-}
+@import "vars";
 
 .query-container {
     border-top-right-radius: 5px;
@@ -113,7 +39,7 @@ code {
 }
 
 th, td {
-    font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-family: $code-font-stack;
     font-size: 13px;
     line-height: 1.4;
 } 
@@ -129,14 +55,6 @@ th, td {
 
 table td + td {
     border-left: 1px solid #ddd;
-}
-
-.number {
-    color: rgba(0, 0, 0, 0.3);
-}
-
-.inline {
-    color: #333;
 }
 
 pre {
@@ -183,7 +101,7 @@ pre {
 }
 
 .codeline pre {
-    font-family: Consolas, Menlo, monospace;
+    font-family: $code-font-stack;
 }
 
 .codeline:hover {

@@ -3,7 +3,8 @@ var gulp = require('gulp'),
     rename = require('gulp-rename'),
     uglify = require('gulp-uglify'),
     minify_css = require('gulp-minify-css'),
-    sass = require('gulp-sass');
+    sass = require('gulp-sass'),
+    svgmin = require('gulp-svgmin');
 
 var paths = {
     js: ['assets/js/**/*.js'],
@@ -11,8 +12,10 @@ var paths = {
     scss: ['assets/css/**/*.scss'],
     images: [
         'assets/images/semquery_logo_shadow.png',
+        'assets/images/logo.png'
+    ],
+    svgs: [
         'assets/images/tiled_carets.svg',
-        'assets/images/logo.png',
         'assets/images/code_pages.svg',
         'assets/images/code_pages_query.svg'
     ]
@@ -38,9 +41,17 @@ gulp.task('css', function() {
         .pipe(gulp.dest(dests.css));
 });
 
-gulp.task('images', function() {
+gulp.task('img', function() {
     return gulp.src(paths.images)
         .pipe(gulp.dest(dests.images));
 });
+
+gulp.task('svg', function() {
+    return gulp.src(paths.svgs)
+        .pipe(svgmin())
+        .pipe(gulp.dest(dests.images));
+});
+
+gulp.task('images', ['img', 'svg'], function() {});
 
 gulp.task('default', ['js', 'css', 'images'], function(){});

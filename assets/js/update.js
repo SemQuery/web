@@ -16,9 +16,8 @@ window.addEventListener("load", function() {
         } else if (event.data.charAt(0) == '#') {
             searchResCount(event.data.substring(1));
             return;
-        } else if (event.data.charAt(0) == "Y") {
-            results.innerHTML = event.data;
-            socket.close();
+        } else if (event.data.charAt(0) == "!") {
+            results.innerHTML = event.data.substring(1);
             return;
         }
         var parts = event.data.split(",");

@@ -94,6 +94,24 @@ func SocketPage(user common.User, r *http.Request, w http.ResponseWriter) {
     executable := common.Config.EngineExecutable
 
     if _, err := os.Stat(path); os.IsNotExist(err) && user.IsLoggedIn() {
+        url := "https://api.github.com/repos/" + repo
+        req, _ := http.NewRequest("GET", url, nil)
+        req.Header.Set("Authorization", "token " + user.Token())
+
+        client := &http.Client {}
+        resp, _ := client.Do(req)
+
+        body, _ := ioutil.ReadAll(resp.Body)
+
+        parse := map[string]interface{} {}
+        json.Unmarshal([]byte(string(body)), &parse)
+
+        if (parse["message"] != nil && parse["message"].(string) == "Not Found") {
+            sockCli.websocket.WriteMessage(1, []byte("!This repository was not found"))
+            sockCli.websocket.Close()
+            return
+        }
+
         os.MkdirAll(path, 0777)
         c := exec.Command("git", "clone", "https://github.com/" + repo + ".git", path)
         c.Run()
@@ -113,7 +131,7 @@ func SocketPage(user common.User, r *http.Request, w http.ResponseWriter) {
         }()
         cmd.Wait()
     } else if !user.IsLoggedIn() {
-        sockCli.websocket.WriteMessage(1, []byte("You must be register in order to index a respository"))
+        sockCli.websocket.WriteMessage(1, []byte("!You must be register in order to index a respository"))
         sockCli.websocket.Close()
         return
     }

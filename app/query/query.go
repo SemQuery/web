@@ -53,7 +53,7 @@ type ClientConn struct {
     clientIP net.Addr
 }
 
-func SocketPage(r *http.Request, w http.ResponseWriter) {
+func SocketPage(user common.User, r *http.Request, w http.ResponseWriter) {
     ws, err := websocket.Upgrade(w, r, nil, 1024, 1024)
     if _, ok := err.(websocket.HandshakeError); (ok || err != nil) {
         log.Fatal(err)
@@ -93,7 +93,7 @@ func SocketPage(r *http.Request, w http.ResponseWriter) {
     path := "_repos/" + repo
     executable := common.Config.EngineExecutable
 
-    if _, err := os.Stat(path); os.IsNotExist(err) {
+    if _, err := os.Stat(path); os.IsNotExist(err) && user.IsLoggedIn() {
         os.MkdirAll(path, 0777)
         c := exec.Command("git", "clone", "https://github.com/" + repo + ".git", path)
         c.Run()
@@ -112,6 +112,10 @@ func SocketPage(r *http.Request, w http.ResponseWriter) {
             }
         }()
         cmd.Wait()
+    } else if !user.IsLoggedIn() {
+        sockCli.websocket.WriteMessage(1, []byte("You must be register in order to index a respository"))
+        sockCli.websocket.Close()
+        return
     }
 
 

@@ -16,6 +16,10 @@ window.addEventListener("load", function() {
         } else if (event.data.charAt(0) == '#') {
             searchResCount(event.data.substring(1));
             return;
+        } else if (event.data.charAt(0) == "Y") {
+            results.innerHTML = event.data;
+            socket.close();
+            return;
         }
         var parts = event.data.split(",");
 

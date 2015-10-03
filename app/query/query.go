@@ -9,12 +9,10 @@ import (
     "os"
     "math/rand"
     "log"
-    "net"
-    "net/http"
     "bufio"
     "strconv"
+    "net/http"
     "strings"
-    "sync"
     "os/exec"
     "encoding/json"
     "io/ioutil"
@@ -45,29 +43,14 @@ func QueryPage(user common.User, r render.Render, req *http.Request) {
     r.HTML(200, "query", data)
 }
 
-var ActiveClients = map[ClientConn]int {}
-var ActiveClientsRWMutex sync.RWMutex
-
-type ClientConn struct {
-    websocket *websocket.Conn
-    clientIP net.Addr
-}
-
 func SocketPage(user common.User, r *http.Request, w http.ResponseWriter) {
     ws, err := websocket.Upgrade(w, r, nil, 1024, 1024)
     if _, ok := err.(websocket.HandshakeError); (ok || err != nil) {
         log.Fatal(err)
         return
     }
-    //Initial connection, store
-    client := ws.RemoteAddr()
-    sockCli := ClientConn {ws, client}
-    ActiveClientsRWMutex.Lock()
-    ActiveClients[sockCli] = 0
-    ActiveClientsRWMutex.Unlock()
 
-    log.Print("Starting")
-    _, msg, err := sockCli.websocket.ReadMessage()
+    _, msg, err := ws.ReadMessage()
     if err != nil {
         log.Print(err)
         return
@@ -94,6 +77,22 @@ func SocketPage(user common.User, r *http.Request, w http.ResponseWriter) {
     executable := common.Config.EngineExecutable
 
     if _, err := os.Stat(path); os.IsNotExist(err) && user.IsLoggedIn() {
+
+        repository, _, e := user.Github().Repositories.Get(strings.Split(repo, "/")[0], strings.Split(repo, "/")[1])
+
+        if e != nil {
+            ws.WriteMessage(1, []byte("!This repository was not found"))
+            ws.Close()
+            return
+        }
+
+        limit := 1000000
+        if *repository.Size > limit {
+            ws.WriteMessage(1, []byte("!This repository exceeds the size limit"))
+            ws.Close()
+            return
+        }
+
         os.MkdirAll(path, 0777)
         c := exec.Command("git", "clone", "https://github.com/" + repo + ".git", path)
         c.Run()
@@ -108,16 +107,15 @@ func SocketPage(user common.User, r *http.Request, w http.ResponseWriter) {
         go func() {
             cmd.Start()
             for scanner.Scan() {
-                sockCli.websocket.WriteMessage(1, []byte(scanner.Text()))
+                ws.WriteMessage(1, []byte(scanner.Text()))
             }
         }()
         cmd.Wait()
     } else if !user.IsLoggedIn() {
-        sockCli.websocket.WriteMessage(1, []byte("You must be register in order to index a respository"))
-        sockCli.websocket.Close()
+        ws.WriteMessage(1, []byte("!You must be logged in order to index a respository"))
+        ws.Close()
         return
     }
-
 
     cmd := exec.Command("java", "-jar", executable, "query", query, repo)
 
@@ -131,7 +129,7 @@ func SocketPage(user common.User, r *http.Request, w http.ResponseWriter) {
             text := scanner.Text()
             parts := strings.Split(text, ",")
             if len(parts) == 1 {
-                sockCli.websocket.WriteMessage(1, []byte("#" + parts[0]))
+                ws.WriteMessage(1, []byte("#" + parts[0]))
                 continue
             }
             file := parts[0]
@@ -149,7 +147,7 @@ func SocketPage(user common.User, r *http.Request, w http.ResponseWriter) {
                 "relative_start": relStart,
                 "relative_end": relEnd,
             })
-            sockCli.websocket.WriteMessage(1, []byte(jstr))
+            ws.WriteMessage(1, []byte(jstr))
         }
     }()
     cmd.Wait()

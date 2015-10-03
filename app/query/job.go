@@ -1,13 +1,14 @@
 package query
 
 import (
-    "github.com/semquery/web/app/common"
+/*    "github.com/semquery/web/app/common"
 
     "log"
     "encoding/json"
-    "github.com/aws/aws-sdk-go/service/sqs"
+    "github.com/aws/aws-sdk-go/service/sqs" */
 )
 
+/*
 type IndexingJob struct {
     User common.User
 
@@ -41,4 +42,4 @@ func QueueIndexingJob(job IndexingJob) bool {
         log.Print(err)
     }
     return err == nil
-}
+}*/

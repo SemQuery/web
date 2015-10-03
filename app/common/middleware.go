@@ -4,19 +4,22 @@ import (
     "github.com/go-martini/martini"
     "github.com/martini-contrib/sessions"
 
+    "golang.org/x/oauth2"
+    "github.com/google/go-github/github"
+
     "strconv"
 )
 
 type User interface {
     IsLoggedIn() bool
     Username() string
-    Token() string
+    Github() *github.Client
 }
 
 type user struct {
     isLoggedIn bool
     username string
-    token string
+    github *github.Client
 }
 
 func (u user) IsLoggedIn() bool {
@@ -27,17 +30,25 @@ func (u user) Username() string {
     return u.username
 }
 
-func (u user) Token() string {
-    return u.token
+func (u user) Github() *github.Client {
+    return u.github
 }
 
 func UserInject(session sessions.Session, ctx martini.Context) {
-    u := user { isLoggedIn: false, username: "", token: "" }
+    u := user { isLoggedIn: false, username: "", github: nil }
 
     if session.Get("loggedin") != nil {
         u.isLoggedIn = true
         u.username = session.Get("username").(string)
-        u.token = session.Get("username").(string)
+
+        ts := oauth2.StaticTokenSource(
+            &oauth2.Token {AccessToken: session.Get("token").(string)},
+        )
+
+        tc := oauth2.NewClient(oauth2.NoContext, ts)
+        client := github.NewClient(tc)
+
+        u.github = client
     }
 
     ctx.MapTo(u, (*User) (nil))

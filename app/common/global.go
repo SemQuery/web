@@ -3,7 +3,7 @@ package common
 import (
     "gopkg.in/mgo.v2"
 
-    "github.com/aws/aws-sdk-go/service/sqs"
+//    "github.com/aws/aws-sdk-go/service/sqs"
 )
 
 type config struct {
@@ -19,13 +19,13 @@ type config struct {
 
     EngineExecutable string `json:"engine_executable"`
 
-    QueueName   string `json:"sqs_name"`
-    QueueRegion string `json:"sqs_region"`
+//    QueueName   string `json:"sqs_name"`
+//    QueueRegion string `json:"sqs_region"`
 }
 
 var Config *config = &config{}
 
 var Database *mgo.Database
 
-var Queue *sqs.SQS
-var QueueURL string
+//var Queue *sqs.SQS
+//var QueueURL string

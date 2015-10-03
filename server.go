@@ -14,8 +14,8 @@ import (
 
     "gopkg.in/mgo.v2"
 
-    "github.com/aws/aws-sdk-go/aws"
-    "github.com/aws/aws-sdk-go/service/sqs"
+//    "github.com/aws/aws-sdk-go/aws"
+//    "github.com/aws/aws-sdk-go/service/sqs"
 )
 
 func initDB() {
@@ -33,6 +33,7 @@ func initDB() {
     log.Print("Database online")
 }
 
+/*
 func initQueue() {
     common.Queue = sqs.New(&aws.Config{
         Region: common.Config.QueueRegion,
@@ -46,7 +47,7 @@ func initQueue() {
         log.Fatal(err)
     }
     common.QueueURL = *output.QueueURL
-}
+}*/
 
 
 func main() {
@@ -60,8 +61,7 @@ func main() {
     }
 
     initDB()
-    initQueue()
-
+    //initQueue()
 
     m := martini.Classic()
     m.Use(sessions.Sessions("semquery", sessions.NewCookieStore([]byte("secret"))))

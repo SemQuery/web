@@ -36,8 +36,8 @@ func UserInject(session sessions.Session, ctx martini.Context) {
 
     if session.Get("loggedin") != nil {
         u.isLoggedIn = true
-        u.username = session.Get("username").(string)
-        u.token = session.Get("username").(string)
+        u.username   = session.Get("username").(string)
+        u.token      = session.Get("token").(string)
     }
 
     ctx.MapTo(u, (*User) (nil))

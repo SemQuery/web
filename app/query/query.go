@@ -31,6 +31,17 @@ func QueryPage(user common.User, r render.Render, req *http.Request) {
     data["ws_id"] = id
     ws_transfer[id] = []string{req.FormValue("q"), req.FormValue("repo")}
 
+    repo_parts := strings.Split(req.FormValue("repo"), "/")
+    repo_owner := repo_parts[0]
+    repo_name  := repo_parts[1]
+
+    job := IndexingJob{user, repo_owner, repo_name}
+    if QueueIndexingJob(job) {
+        log.Print("Queued indexing job")
+    } else {
+        log.Print("Failed to queue indexing job")
+    }
+
 
     path := "_repos/" + req.FormValue("repo")
 
@@ -94,28 +105,30 @@ func SocketPage(user common.User, r *http.Request, w http.ResponseWriter) {
     executable := common.Config.EngineExecutable
 
     if _, err := os.Stat(path); os.IsNotExist(err) && user.IsLoggedIn() {
-        os.MkdirAll(path, 0777)
-        c := exec.Command("git", "clone", "https://github.com/" + repo + ".git", path)
-        c.Run()
-        c.Wait()
+        if user.IsLoggedIn() {
+            os.MkdirAll(path, 0777)
+            c := exec.Command("git", "clone", "https://github.com/" + repo + ".git", path)
+            c.Run()
+            c.Wait()
 
-        cmd := exec.Command("java", "-jar", executable, "index", path, repo)
+            cmd := exec.Command("java", "-jar", executable, "index", path, repo)
 
-        cmdReader, _ := cmd.StdoutPipe()
+            cmdReader, _ := cmd.StdoutPipe()
 
-        scanner := bufio.NewScanner(cmdReader)
+            scanner := bufio.NewScanner(cmdReader)
 
-        go func() {
-            cmd.Start()
-            for scanner.Scan() {
-                sockCli.websocket.WriteMessage(1, []byte(scanner.Text()))
-            }
-        }()
-        cmd.Wait()
-    } else if !user.IsLoggedIn() {
-        sockCli.websocket.WriteMessage(1, []byte("You must be register in order to index a respository"))
-        sockCli.websocket.Close()
-        return
+            go func() {
+                cmd.Start()
+                for scanner.Scan() {
+                    sockCli.websocket.WriteMessage(1, []byte(scanner.Text()))
+                }
+            }()
+            cmd.Wait()
+        } else {
+            sockCli.websocket.WriteMessage(1, []byte("You must be registered to index a respository"))
+            sockCli.websocket.Close()
+            return
+        }
     }
 
 

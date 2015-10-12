@@ -62,7 +62,7 @@ func LoginAction(session sessions.Session, r *http.Request, re render.Render) {
 
     if err = bcrypt.CompareHashAndPassword(hashed, bytes); err == nil {
         session.Set("loggedin", true)
-        session.Set("username", username)
+        session.Set("username", result["username"].(string))
         session.Set("token", result["github_token"].(string))
         re.Redirect("/")
         return

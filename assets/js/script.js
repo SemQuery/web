@@ -62,3 +62,9 @@ function animateBG(duration) {
         }
     }, freq);        
 }
+
+function learnMore() {
+    $('body').animate({
+        scrollTop: $('.about-segment').offset().top
+    }, 500);
+}

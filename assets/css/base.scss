@@ -9,8 +9,8 @@ body, input, .ui, h1, h2, h3, h4, h5 {
     background-color: rgba(0, 0, 0, 0.12) !important;
 }
 
-.ui.menu-transparent .item {
-    color: white;
+.ui.menu-transparent .item, .ui.menu-transparent .active.item {
+    color: white !important;
 }
 
 .ui.menu-transparent .image {
@@ -33,8 +33,12 @@ body, input, .ui, h1, h2, h3, h4, h5 {
     font-size: 3em;
 }
 
+.no-mobile {}
 .columns-desc .right-column {}
 @media (max-width: 600px) {
+    .no-mobile {
+        display: none !important;
+    }
     .jumbo-text {
         font-size: 2.5em;
     }
@@ -129,6 +133,8 @@ code {
 .logo {
     margin-left: 7px;
     margin-top: 7px;
+    border-radius: 0;
+    height: 1.8em;
 }
 
 .sbtn {

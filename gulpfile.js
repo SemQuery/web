@@ -17,7 +17,10 @@ var paths = {
     svgs: [
         'assets/images/tiled_carets.svg',
         'assets/images/code_pages.svg',
-        'assets/images/code_pages_query.svg'
+        'assets/images/code_pages_query.svg',
+        'assets/images/logo_v2.svg',
+        'assets/images/logo_v2_white.svg',
+        'assets/images/logo_v2_small.svg'
     ]
 };
 

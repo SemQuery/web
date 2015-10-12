@@ -62,7 +62,6 @@ func main() {
     initDB()
     initQueue()
 
-
     m := martini.Classic()
     m.Use(sessions.Sessions("semquery", sessions.NewCookieStore([]byte("secret"))))
     m.Use(render.Renderer(render.Options {

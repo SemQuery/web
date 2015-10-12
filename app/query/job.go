@@ -8,6 +8,7 @@ import (
     "github.com/aws/aws-sdk-go/service/sqs"
 )
 
+
 type IndexingJob struct {
     User common.User
 

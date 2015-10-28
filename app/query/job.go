@@ -4,36 +4,31 @@ import (
     "github.com/semquery/web/app/common"
 
     "log"
-    "encoding/json"
+    "github.com/aws/aws-sdk-go/aws"
     "github.com/aws/aws-sdk-go/service/sqs"
 )
 
-
 type IndexingJob struct {
-    User common.User
+    Token string
 
-    RepositoryOwner string
-    RepositoryName  string
-}
-
-func (j *IndexingJob) toSQSJson() string {
-    data := map[string]interface{}{
-        "user_id": "TODO",
-        "repo_owner": j.RepositoryOwner,
-        "repo_name": j.RepositoryName,
-    }
-
-    encoded, _ := json.Marshal(data)
-
-    return string(encoded)
+    RepositoryPath string
 }
 
 // returns: whether queueing the job was successful
 func QueueIndexingJob(job IndexingJob) bool {
-    msg := job.toSQSJson()
     input := sqs.SendMessageInput{
-        MessageBody: &msg,
-        QueueURL: &common.QueueURL,
+        MessageAttributes: map[string]*sqs.MessageAttributeValue {
+            "path": {
+                DataType: aws.String("String"),
+                StringValue: aws.String(job.RepositoryPath),
+            },
+            "token": {
+                DataType: aws.String("String"),
+                StringValue: aws.String(job.Token),
+            },
+
+        },
+        QueueUrl: &common.QueueURL,
     }
 
     _, err := common.Queue.SendMessage(&input)

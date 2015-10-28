@@ -5,14 +5,15 @@ import (
     "github.com/semquery/web/app/routes"
 
     "github.com/go-martini/martini"
-    "github.com/martini-contrib/sessions"
     "github.com/martini-contrib/render"
+    "github.com/martini-contrib/sessions"
 
+    "encoding/json"
     "log"
     "os"
-    "encoding/json"
 
     "gopkg.in/mgo.v2"
+    "gopkg.in/redis.v3"
 
     "github.com/aws/aws-sdk-go/aws"
     "github.com/aws/aws-sdk-go/service/sqs"
@@ -20,7 +21,7 @@ import (
 
 func initDB() {
     session, err := mgo.DialWithInfo(&mgo.DialInfo{
-        Addrs: []string{common.Config.DBAddr},
+        Addrs:    []string{common.Config.DBAddr},
         Database: common.Config.DBName,
         Username: common.Config.DBUser,
         Password: common.Config.DBPass,
@@ -31,23 +32,28 @@ func initDB() {
 
     common.Database = session.DB(common.Config.DBName)
     log.Print("Database online")
+
+    common.Rds = redis.NewClient(&redis.Options {
+        Addr: common.Config.RedisAddr,
+        Password: common.Config.RedisPass,
+        DB: common.Config.RedisDB,
+    })
 }
 
 func initQueue() {
     common.Queue = sqs.New(&aws.Config{
-        Region: common.Config.QueueRegion,
+        Region: &common.Config.QueueRegion,
     })
 
-    input := sqs.GetQueueURLInput{
+    input := sqs.GetQueueUrlInput{
         QueueName: &common.Config.QueueName,
     }
-    output, err := common.Queue.GetQueueURL(&input)
+    output, err := common.Queue.GetQueueUrl(&input)
     if err != nil {
         log.Fatal(err)
     }
-    common.QueueURL = *output.QueueURL
+    common.QueueURL = *output.QueueUrl
 }
-
 
 func main() {
     cfg, err := os.Open("config.json")
@@ -77,4 +83,3 @@ func main() {
         m.Run()
     }
 }
-

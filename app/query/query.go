@@ -3,17 +3,19 @@ package query
 import (
     "github.com/semquery/web/app/common"
 
+    "gopkg.in/mgo.v2/bson"
+
     "github.com/martini-contrib/render"
+    "github.com/martini-contrib/sessions"
     "github.com/gorilla/websocket"
 
     "os"
     "math/rand"
     "log"
-    "bufio"
     "strconv"
     "net/http"
+    "net/url"
     "strings"
-    "os/exec"
     "encoding/json"
     "io/ioutil"
 )
@@ -29,18 +31,6 @@ func QueryPage(user common.User, r render.Render, req *http.Request) {
     data["ws_id"] = id
     ws_transfer[id] = []string{req.FormValue("q"), req.FormValue("repo")}
 
-    repo_parts := strings.Split(req.FormValue("repo"), "/")
-    repo_owner := repo_parts[0]
-    repo_name  := repo_parts[1]
-
-    job := IndexingJob{user, repo_owner, repo_name}
-    if QueueIndexingJob(job) {
-        log.Print("Queued indexing job")
-    } else {
-        log.Print("Failed to queue indexing job")
-    }
-
-
     path := "_repos/" + req.FormValue("repo")
 
     if _, err := os.Stat(path); os.IsNotExist(err) {
@@ -54,7 +44,12 @@ func QueryPage(user common.User, r render.Render, req *http.Request) {
     r.HTML(200, "query", data)
 }
 
-func SocketPage(user common.User, r *http.Request, w http.ResponseWriter) {
+type Packet struct {
+    Action string
+    Payload map[string]interface{}
+}
+
+func SocketPage(user common.User, session sessions.Session, r *http.Request, w http.ResponseWriter) {
     ws, err := websocket.Upgrade(w, r, nil, 1024, 1024)
     if _, ok := err.(websocket.HandshakeError); (ok || err != nil) {
         log.Fatal(err)
@@ -84,130 +79,89 @@ func SocketPage(user common.User, r *http.Request, w http.ResponseWriter) {
         return
     }
 
-    path := "_repos/" + repo
-    executable := common.Config.EngineExecutable
+    var store bson.M
+    err = common.Database.C("Repositories").Find(bson.M {
+       "repository": repo,
+    }).One(&store)
 
-    if _, err := os.Stat(path); os.IsNotExist(err) && user.IsLoggedIn() {
-        repository, _, e := user.Github().Repositories.Get(strings.Split(repo, "/")[0], strings.Split(repo, "/")[1])
+    if err != nil {
+        if user.IsLoggedIn() {
+            repository, _, e := user.Github().Repositories.Get(strings.Split(repo, "/")[0], strings.Split(repo, "/")[1])
 
-        if e != nil {
-            ws.WriteMessage(1, []byte("!This repository was not found"))
+            if e != nil {
+                ws.WriteMessage(1, []byte("!This repository was not found"))
+                ws.Close()
+                return
+            }
+
+            limit := 1000000
+            if *repository.Size > limit {
+                ws.WriteMessage(1, []byte("!This repository exceeds the size limit"))
+                ws.Close()
+                return
+            }
+
+            doc := bson.M {
+                "repository": repo,
+                "status": "standby",
+            }
+            common.Database.C("repostiories").Insert(doc)
+
+            indexJob := IndexingJob {
+                Token: session.Get("token").(string),
+                RepositoryPath: repo,
+            }
+
+            QueueIndexingJob(indexJob)
+
+            progress := Packet { "", map[string]interface{} {} }
+            pubsub, _ := common.Rds.Subscribe(repo)
+            for {
+                msg, err := pubsub.ReceiveMessage()
+                if err != nil {
+                    continue
+                }
+                json.Unmarshal([]byte(msg.Payload), progress)
+                if progress.Action == "Finished" {
+                    find := bson.M {
+                        "repository": repo,
+                    }
+                    update := bson.M {
+                        "status": "completed",
+                    }
+                    common.Database.C("repositories").Update(find, update)
+                    break;
+                }
+                ws.WriteMessage(1, []byte(msg.Payload))
+            }
+            pubsub.Close()
+        } else if !user.IsLoggedIn() {
+            ws.WriteMessage(1, []byte("!You must be logged in order to index a respository"))
             ws.Close()
             return
         }
-
-        limit := 1000000
-        if *repository.Size > limit {
-            ws.WriteMessage(1, []byte("!This repository exceeds the size limit"))
-            ws.Close()
-            return
-        }
-
-        os.MkdirAll(path, 0777)
-        c := exec.Command("git", "clone", "https://github.com/" + repo + ".git", path)
-        c.Run()
-        c.Wait()
-
-        cmd := exec.Command("java", "-jar", executable, "index", path, repo)
-
-        cmdReader, _ := cmd.StdoutPipe()
-
-        scanner := bufio.NewScanner(cmdReader)
-
-        go func() {
-            cmd.Start()
-            for scanner.Scan() {
-                ws.WriteMessage(1, []byte(scanner.Text()))
-            }
-        }()
-        cmd.Wait()
-    } else if !user.IsLoggedIn() {
-        ws.WriteMessage(1, []byte("!You must be logged in order to index a respository"))
-        ws.Close()
-        return
     }
 
-    cmd := exec.Command("java", "-jar", executable, "query", query, repo)
+    letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-    cmdReader, _ := cmd.StdoutPipe()
-
-    scanner := bufio.NewScanner(cmdReader)
-
-    go func() {
-        cmd.Start()
-        for scanner.Scan() {
-            text := scanner.Text()
-            parts := strings.Split(text, ",")
-            if len(parts) == 1 {
-                ws.WriteMessage(1, []byte("#" + parts[0]))
-                continue
-            }
-            file := parts[0]
-            src, _ := ioutil.ReadFile(file)
-            start, _ := strconv.Atoi(parts[1])
-            end, _ := strconv.Atoi(parts[2])
-            lines, relStart, relEnd := extractLines(string(src), start, end)
-            j := map[string]interface{}{}
-            for k, v := range lines {
-                j[strconv.Itoa(k)] = v
-            }
-            jstr, _ := json.Marshal(map[string]interface{}{
-                "lines": j,
-                "file": file,
-                "relative_start": relStart,
-                "relative_end": relEnd,
-            })
-            ws.WriteMessage(1, []byte(jstr))
-        }
-    }()
-    cmd.Wait()
-
-    log.Print("Finished indexing.")
-}
-
-// Extracts the lines encapsulating characters in
-// the range (start..end)
-//
-// returns: (line pairs, relative start position, relative end position)
-func extractLines(src string, start int, end int) (map[int]string, int, int) {
-    lines := map[int]string{}
-
-    currentLine := 1
-    lineStartPos := 0
-    relativeStartPos := 0
-
-    for i := 0; i < start; i++ {
-        if src[i] == '\n' {
-            currentLine++;
-            lineStartPos = i + 1
-        }
-        if (i == start - 1) {
-            relativeStartPos = i - lineStartPos + 1
-        }
+    b := make([]rune, 10)
+    for i := range b {
+        b[i] = letters[rand.Intn(len(letters))]
     }
 
-    relativeEndPos := 0
+    common.Rds.Set(query + "|" + repo, string(b), 0)
 
-    for i := start; i < len(src); i++ {
-        if i == end {
-            relativeEndPos = i - lineStartPos
-        }
-        if src[i] == '\n' || i == len(src) - 1 {
-            sub := src[lineStartPos : i]
-            lines[currentLine] = sub
+    form := url.Values {}
+    form.Add("token", string(b))
+    form.Add("repo", repo)
+    form.Add("query", query)
 
-            if len(lines) == 15 {
-                return lines, relativeStartPos, relativeEndPos
-            }
+    req, _ := http.NewRequest("POST", "", strings.NewReader(form.Encode()))
+    client := http.Client{}
+    resp, _ := client.Do(req)
 
-            currentLine += 1
-            lineStartPos = i + 1
+    body, _ := ioutil.ReadAll(resp.Body)
 
-            if i >= end {
-                break
-            }
-        }
-    }
-
-    return lines,relativeStartPos, relativeEndPos
+    ws.WriteMessage(1, body)
+    ws.Close()
 }

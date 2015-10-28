@@ -10,14 +10,15 @@ window.addEventListener("load", function() {
     var results = document.getElementById("query-results");
 
     socket.onmessage = function(event) {
-        if (event.data.charAt(0) == '{') {
-            populateCode(JSON.parse(event.data));
+        var packet = JSON.parse(event.data);
+        if (packet.action == "results") {
+            populateCode(JSON.parse(packet.payload));
             return;
-        } else if (event.data.charAt(0) == '#') {
-            searchResCount(event.data.substring(1));
+        } else if (packet.action == "files") {
+            searchResCount(packet.payload.count);
             return;
-        } else if (event.data.charAt(0) == "!") {
-            results.innerHTML = event.data.substring(1);
+        } else if (packet.action == "warning") {
+            results.innerHTML = packet.payload.message;
             return;
         }
         var parts = event.data.split(",");

@@ -45,8 +45,13 @@ func QueryPage(user common.User, r render.Render, req *http.Request) {
 }
 
 type Packet struct {
-    Action string
-    Payload map[string]interface{}
+    Action string `json:"action"`
+    Payload map[string]interface{} `json:"payload"`
+}
+
+func (p Packet) Send(ws *websocket.Conn) {
+    raw, _ := json.Marshal(p)
+    ws.WriteMessage(1, raw)
 }
 
 func SocketPage(user common.User, session sessions.Session, r *http.Request, w http.ResponseWriter) {
@@ -75,12 +80,11 @@ func SocketPage(user common.User, session sessions.Session, r *http.Request, w h
 
     repo_parts := strings.Split(repo, "/")
     if len(repo_parts) < 2 {
-        log.Print("Invalid repo")
         return
     }
 
     var store bson.M
-    err = common.Database.C("Repositories").Find(bson.M {
+    err = common.Database.C("repositories").Find(bson.M {
        "repository": repo,
     }).One(&store)
 
@@ -89,14 +93,24 @@ func SocketPage(user common.User, session sessions.Session, r *http.Request, w h
             repository, _, e := user.Github().Repositories.Get(strings.Split(repo, "/")[0], strings.Split(repo, "/")[1])
 
             if e != nil {
-                ws.WriteMessage(1, []byte("!This repository was not found"))
+                Packet {
+                    Action: "warning",
+                    Payload: map[string]interface{} {
+                        "message": "This repository was not found",
+                    },
+                }.Send(ws)
                 ws.Close()
                 return
             }
 
             limit := 1000000
             if *repository.Size > limit {
-                ws.WriteMessage(1, []byte("!This repository exceeds the size limit"))
+                Packet {
+                    Action: "warning",
+                    Payload: map[string]interface{} {
+                        "message": "This repository exceeds the size limit",
+                    },
+                }.Send(ws)
                 ws.Close()
                 return
             }
@@ -122,7 +136,7 @@ func SocketPage(user common.User, session sessions.Session, r *http.Request, w h
                     continue
                 }
                 json.Unmarshal([]byte(msg.Payload), progress)
-                if progress.Action == "Finished" {
+                if progress.Action == "finished" {
                     find := bson.M {
                         "repository": repo,
                     }
@@ -131,12 +145,18 @@ func SocketPage(user common.User, session sessions.Session, r *http.Request, w h
                     }
                     common.Database.C("repositories").Update(find, update)
                     break;
+                } else {
+                    ws.WriteMessage(1, []byte(msg.Payload))
                 }
-                ws.WriteMessage(1, []byte(msg.Payload))
             }
             pubsub.Close()
         } else if !user.IsLoggedIn() {
-            ws.WriteMessage(1, []byte("!You must be logged in order to index a respository"))
+            Packet {
+                Action: "warning",
+                Payload: map[string]interface{} {
+                    "message": "You must be logged in order to index a repository",
+                },
+            }.Send(ws)
             ws.Close()
             return
         }

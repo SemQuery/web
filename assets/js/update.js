@@ -7,33 +7,30 @@ window.addEventListener("load", function() {
         socket.send("" + WS_ID);
     };
 
-    var results = document.getElementById("query-results");
+    var results = $("#query-results");
 
     socket.onmessage = function(event) {
         var packet = JSON.parse(event.data);
-        if (packet.action == "results") {
-            populateCode(JSON.parse(packet.payload));
-            return;
-        } else if (packet.action == "files") {
-            searchResCount(packet.payload.count);
-            return;
-        } else if (packet.action == "warning") {
-            results.innerHTML = packet.payload.message;
-            return;
-        }
-        var parts = event.data.split(",");
-
-        var percent = parts[0], files = parts[1], lines = parts[2];
-
-        results.innerHTML = "Indexed <b>" + lines + "</b> lines in <b>" + files + "</b> files (<b>" + percent + "</b>%)";
-
-        document.getElementById("bar").setAttribute("style", "width: " + percent + "%");
-        document.getElementById("progress-label").innerText = percent + "%";
-
-        if (percent == "100") {
-            var pBar = document.getElementById("progress-bar");
-            var cssClasses = pBar.getAttribute("class");
-            pBar.setAttribute("class", cssClasses + " success");
+        switch (packet.action) {
+            case "results":
+                $('#search-res-count').text("Found results in " + packet.payload.files + " files");
+                for (var i = 0; i != packet.payload.found.length; i++) {
+                    populateCode(packet.payload.found[i]);
+                }
+                break;
+            case "warning":
+                results.text(packet.payload.message);
+                break;
+            case "indexing":
+                results.text("Indexed <b>" + packet.payload.lines + "</b> lines in <b>" + packet.payload.files + "</b> files (<b>" + packet.payload.percent + "</b>%)"); 
+                $("#bar").attr("style", "width: " + packet.payload.percent + "%");
+                $("#progress-label").text(packet.payload.percent + "%");
+                if (packet.payload.message == "100") {
+                    var pBar = $("#progress-bar");
+                    var cssClasses = pBar.attr("class");
+                    pBar.attr("class", cssClasses + " success");
+                }
+                break;
         }
     }
 });

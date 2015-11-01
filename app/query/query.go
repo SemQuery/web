@@ -11,7 +11,6 @@ import (
 
     "os"
     "math/rand"
-    "log"
     "strconv"
     "net/http"
     "net/url"
@@ -57,19 +56,16 @@ func (p Packet) Send(ws *websocket.Conn) {
 func SocketPage(user common.User, session sessions.Session, r *http.Request, w http.ResponseWriter) {
     ws, err := websocket.Upgrade(w, r, nil, 1024, 1024)
     if _, ok := err.(websocket.HandshakeError); (ok || err != nil) {
-        log.Fatal(err)
         return
     }
 
     _, msg, err := ws.ReadMessage()
     if err != nil {
-        log.Print(err)
         return
     }
 
     id, err := strconv.ParseInt(string(msg), 10, 64)
     if err != nil {
-        log.Print(err)
         return
     }
 
@@ -135,7 +131,8 @@ func SocketPage(user common.User, session sessions.Session, r *http.Request, w h
                 if err != nil {
                     continue
                 }
-                json.Unmarshal([]byte(msg.Payload), progress)
+                progress = Packet {}
+                json.Unmarshal([]byte(msg.Payload), &progress)
                 if progress.Action == "finished" {
                     find := bson.M {
                         "repository": repo,
@@ -176,9 +173,8 @@ func SocketPage(user common.User, session sessions.Session, r *http.Request, w h
     form.Add("repo", repo)
     form.Add("query", query)
 
-    req, _ := http.NewRequest("POST", "", strings.NewReader(form.Encode()))
-    client := http.Client{}
-    resp, _ := client.Do(req)
+    client := &http.Client{}
+    resp, _ := client.PostForm("http://localhost:3001/", form)
 
     body, _ := ioutil.ReadAll(resp.Body)
 

@@ -3,9 +3,11 @@ package query
 import (
     "github.com/semquery/web/app/common"
 
-    "log"
     "github.com/aws/aws-sdk-go/aws"
     "github.com/aws/aws-sdk-go/service/sqs"
+
+    "log"
+    "encoding/json"
 )
 
 type IndexingJob struct {
@@ -14,20 +16,15 @@ type IndexingJob struct {
     RepositoryPath string
 }
 
+func (job IndexingJob) toJson() string {
+    encode, _ := json.Marshal(job)
+    return string(encode)
+}
+
 // returns: whether queueing the job was successful
 func QueueIndexingJob(job IndexingJob) bool {
     input := sqs.SendMessageInput{
-        MessageAttributes: map[string]*sqs.MessageAttributeValue {
-            "path": {
-                DataType: aws.String("String"),
-                StringValue: aws.String(job.RepositoryPath),
-            },
-            "token": {
-                DataType: aws.String("String"),
-                StringValue: aws.String(job.Token),
-            },
-
-        },
+        MessageBody: aws.String(job.toJson()),
         QueueUrl: &common.QueueURL,
     }
 

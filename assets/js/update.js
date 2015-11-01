@@ -10,6 +10,7 @@ window.addEventListener("load", function() {
     var results = $("#query-results");
 
     socket.onmessage = function(event) {
+        console.log(event.data);
         var packet = JSON.parse(event.data);
         switch (packet.action) {
             case "results":
@@ -22,7 +23,7 @@ window.addEventListener("load", function() {
                 results.text(packet.payload.message);
                 break;
             case "indexing":
-                results.text("Indexed <b>" + packet.payload.lines + "</b> lines in <b>" + packet.payload.files + "</b> files (<b>" + packet.payload.percent + "</b>%)"); 
+                results.html("Indexed <b>" + packet.payload.lines + "</b> lines in <b>" + packet.payload.files + "</b> files (<b>" + packet.payload.percent + "</b>%)"); 
                 $("#bar").attr("style", "width: " + packet.payload.percent + "%");
                 $("#progress-label").text(packet.payload.percent + "%");
                 if (packet.payload.message == "100") {

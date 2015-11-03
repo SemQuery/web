@@ -1,10 +1,11 @@
-var gulp = require('gulp'),
-    concat = require('gulp-concat'),
-    rename = require('gulp-rename'),
-    uglify = require('gulp-uglify'),
+var gulp       = require('gulp'),
+    concat     = require('gulp-concat'),
+    rename     = require('gulp-rename'),
+    uglify     = require('gulp-uglify'),
     minify_css = require('gulp-minify-css'),
-    sass = require('gulp-sass'),
-    svgmin = require('gulp-svgmin');
+    sass       = require('gulp-sass'),
+    svgmin     = require('gulp-svgmin'),
+    sourcemaps = require('gulp-sourcemaps');
 
 var paths = {
     js: ['assets/js/**/*.js'],
@@ -32,8 +33,10 @@ var dests = {
 
 gulp.task('js', function() {
     return gulp.src(paths.js)
+        .pipe(sourcemaps.init())
         .pipe(concat('all.js'))
         .pipe(uglify())
+        .pipe(sourcemaps.write())
         .pipe(gulp.dest(dests.js));
 });
 

@@ -6,8 +6,6 @@ import (
 
     "golang.org/x/oauth2"
     "github.com/google/go-github/github"
-
-    "strconv"
 )
 
 type User interface {
@@ -56,7 +54,7 @@ func UserInject(session sessions.Session, ctx martini.Context) {
 
 func CreateData(user User, session sessions.Session) map[string]interface{} {
     data := map[string]interface{} {
-        "loggedin": strconv.FormatBool(user.IsLoggedIn()),
+        "loggedin": user.IsLoggedIn(),
         "message": "",
     }
     if user.IsLoggedIn() {

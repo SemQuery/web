@@ -9,7 +9,6 @@ import (
     "github.com/martini-contrib/sessions"
     "github.com/gorilla/websocket"
 
-    "os"
     "math/rand"
     "strconv"
     "net/http"
@@ -26,17 +25,28 @@ func QueryPage(user common.User, r render.Render, req *http.Request) {
     data := common.CreateData(user, nil)
 
     req.ParseForm()
-    id := rand.Int63()
-    data["ws_id"] = id
-    ws_transfer[id] = []string{req.FormValue("q"), req.FormValue("repo")}
+    repoUser := req.FormValue("user")
+    repoName := req.FormValue("name")
+    status := common.RepositoryStatus(&common.Repository{
+        User: repoUser,
+        Name: repoName,
+    })
 
-    path := "_repos/" + req.FormValue("repo")
+    data["indexed"] = false
+    data["status"]  = status
 
-    if _, err := os.Stat(path); os.IsNotExist(err) {
-        data["indexed"] = false
-    } else {
-        data["indexed"] = true
-    }
+
+    // id := rand.Int63()
+    // data["ws_id"] = id
+    // ws_transfer[id] = []string{req.FormValue("q"), req.FormValue("repo")}
+
+    // path := "_repos/" + req.FormValue("repo")
+
+    // if _, err := os.Stat(path); os.IsNotExist(err) {
+    //     data["indexed"] = false
+    // } else {
+    //     data["indexed"] = true
+    // }
 
     data["query"] = req.FormValue("q")
 

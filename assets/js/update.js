@@ -1,5 +1,9 @@
 window.addEventListener("load", function() {
     if (typeof WS_ID === "undefined") return;
+
+    console.log("Premature exit");
+    return;
+
     var url = 'ws://localhost:3000/socket';
     var socket = new WebSocket(url);
 

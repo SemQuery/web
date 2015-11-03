@@ -16,6 +16,7 @@ import (
     "gopkg.in/redis.v3"
 
     "github.com/aws/aws-sdk-go/aws"
+    "github.com/aws/aws-sdk-go/aws/session"
     "github.com/aws/aws-sdk-go/service/sqs"
 )
 
@@ -41,7 +42,7 @@ func initDB() {
 }
 
 func initQueue() {
-    common.Queue = sqs.New(&aws.Config{
+    common.Queue = sqs.New(session.New(), &aws.Config{
         Region: &common.Config.QueueRegion,
     })
 

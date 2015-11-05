@@ -96,3 +96,37 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b3e3c6', end
 #learn-more:hover {
     color: #001050;
 }
+
+#source-picker > .item {
+    border-left-color: white;
+}
+
+#source-picker > .item > a {
+    color: white;
+    text-decoration: underline;
+}
+
+.source-input > .input {
+    display: inline-block !important;
+}
+
+#github-source-input, #link-source-input {
+    width: 400px;
+    margin: 0 auto;
+}
+
+#link-source-input .input {
+    width: 400px;
+}
+
+.github-separator::after {
+    margin: 0 5px;
+    content: "/";
+    color: white;
+    font-size: 1.5em;
+}
+
+#search-button {
+    width: 400px;
+    font-weight: lighter !important;
+}

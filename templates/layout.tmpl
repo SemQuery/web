@@ -8,6 +8,9 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
     </head>
     <body>
+        {{ if .pagename }}
+            <script>var CURRENT_PAGE = "{{ .pagename }}";</script>
+        {{ end }}
         <div class="menu-transparent ui fixed secondary pointing menu navigation">
             <div class="ui container">
                 <a href="/"><img src="/images/logo_v2_small.svg" class="logo ui image"></img></a>

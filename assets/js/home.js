@@ -46,7 +46,6 @@ var App = App || {pages: {}};
         if (e)
             e.preventDefault();
 
-        console.log("Learn more called");
         $('body').animate({
             scrollTop: $('.about-segment').offset().top
         }, 500);
@@ -54,4 +53,49 @@ var App = App || {pages: {}};
 
     App.Home.learnMore = learnMore;
     bind(App.Home, '#learn-more', 'click', learnMore);
+
+    var Sources = {
+        GITHUB: "github-source-input",
+        LINK: "link-source-input"
+    }
+    var currentSourceSelection = Sources.GITHUB;
+    function selectSource(src) {
+        if (src != currentSourceSelection) {
+            currentSourceSelection = src;
+            disableHiddenInputs();
+            Object.keys(Sources).forEach(function (k) {
+                var inputId = Sources[k];
+                if (inputId != src) {
+                    $(document.getElementById(inputId)).attr('style', 'display: none');
+                }
+            });
+            $(document.getElementById(src)).attr('style', '');
+        }
+    }
+    function selectGithubSource(e) {
+        if (e)
+            e.preventDefault();
+
+        selectSource(Sources.GITHUB);
+    }
+    function selectLinkSource(e) {
+        if (e)
+            e.preventDefault();
+
+        selectSource(Sources.LINK);
+    }
+
+    bind(App.Home, '#source-picker-github', 'click', selectGithubSource);
+    bind(App.Home, '#source-picker-link', 'click', selectLinkSource);
+
+    function disableHiddenInputs() {
+        $("#" + currentSourceSelection + " input").removeAttr('disabled');
+        Object.keys(Sources).forEach(function (k) {
+            var id = Sources[k];
+            if (id != currentSourceSelection) {
+                $("#" + id + " input").attr('disabled', 'disabled');
+            }
+        });
+    }
+    bind(App.Home, 'form#source-form', 'submit', disableHiddenInputs);
 })();

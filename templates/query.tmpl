@@ -1,13 +1,13 @@
 <script>
-    var WS_ID = "{{ .ws_id }}";
+    var WS_ID = "{{ .Ws_id }}";
 </script>
 <div class="sunset-background-slate background-slate-fixed"></div>
 <div class="query-container ui container" style="margin-left: 10%; margin-right: 10%">
     <div class="ui one column centered grid">
         <div class="column">
             <div align="center">
-                <h1 class="objective">Searching for <code>{{ .query }}</code></h1>
-                {{ if .indexed }}
+                <h1 class="objective">Searching for <code>{{ .Query }}</code></h1>
+                {{ if .Indexed }}
                     <p id="query-results">Already indexed</p>
                 {{ else }}
                     <p id="query-results">Cloning Repository...</p>
@@ -16,7 +16,7 @@
                 
             </div>
             <div style="margin: 0 15%">
-                {{ if .indexed }}
+                {{ if .Indexed }}
                     <div id="progress-bar" class="ui success progress">
                         <div id="bar" class="bar" style="width: 100%;">
                             <div id="progress-label" class="progress">100%</div>

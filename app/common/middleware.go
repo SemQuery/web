@@ -9,7 +9,6 @@ import (
 
     "labix.org/v2/mgo/bson"
 
-    "strconv"
 )
 
 type User interface {
@@ -39,12 +38,11 @@ func (u user) AddIndexed(repo string) {
 func (u user) GetIndexed() []string {
     var usrdat bson.M
     query := bson.M { "id": u.id }
-    if err := Database.C("users").Find(query).One(&usrdat); err != nil {
-        return nil
-    }
     list := []string {}
-    for _, s := range usrdat["repos"].([]interface{}) {
-        list = append(list, s.(string))
+    if err := Database.C("users").Find(query).One(&usrdat); err == nil {
+        for _, s := range usrdat["repos"].([]interface{}) {
+            list = append(list, s.(string))
+        }
     }
     return list
 }
@@ -85,14 +83,3 @@ func UserInject(session sessions.Session, ctx martini.Context) {
 
     ctx.MapTo(u, (*User) (nil))
 }
-
-func CreateData(user User) map[string]interface{} {
-    data := map[string]interface{} {
-        "loggedin": strconv.FormatBool(user.IsLoggedIn()),
-    }
-    if user.IsLoggedIn() {
-        data["username"] = user.Username()
-    }
-    return data
-}
-

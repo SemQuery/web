@@ -7,6 +7,14 @@ import (
 )
 
 func MePage(user common.User, r render.Render) {
-    data := common.CreateData(user)
+    data := struct {
+        Loggedin bool
+        Usrname string
+        Repos []string
+    } {
+        Loggedin: user.IsLoggedIn(),
+        Usrname: user.Username(),
+        Repos: user.GetIndexed(),
+    }
     r.HTML(200, "me", data)
 }

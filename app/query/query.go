@@ -23,22 +23,29 @@ var ws_transfer = map[int64][]string{}
 
 //Rendering search page with template data
 func QueryPage(user common.User, r render.Render, req *http.Request) {
-    data := common.CreateData(user)
+    data := struct {
+        Loggedin, Indexed bool
+        Usrname, Query string
+        Ws_id int64
+    } {
+        Loggedin: user.IsLoggedIn(),
+        Usrname: user.Username(),
+    }
 
     req.ParseForm()
     id := rand.Int63()
-    data["ws_id"] = id
+    data.Ws_id = id
     ws_transfer[id] = []string{req.FormValue("q"), req.FormValue("repo")}
 
     path := "_repos/" + req.FormValue("repo")
 
     if _, err := os.Stat(path); os.IsNotExist(err) {
-        data["indexed"] = false
+        data.Indexed = false
     } else {
-        data["indexed"] = true
+        data.Indexed = true
     }
 
-    data["query"] = req.FormValue("q")
+    data.Query = req.FormValue("q")
 
     r.HTML(200, "query", data)
 }

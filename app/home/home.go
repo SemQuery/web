@@ -8,6 +8,12 @@ import (
 
 
 func HomePage(user common.User, r render.Render) {
-    data := common.CreateData(user)
+    data := struct {
+        Loggedin bool
+        Usrname string
+    } {
+        Loggedin: user.IsLoggedIn(),
+        Usrname: user.Username(),
+    }
     r.HTML(200, "index", data)
 }

@@ -15,8 +15,10 @@ func RegisterRoutes(m *martini.ClassicMartini) {
     m.Post("/query", query.QueryPage)
     m.Get("/socket", query.SocketPage)
 
+    m.Get("/me", user.MePage)
+
     m.Get("/login", user.Login)
-    m.Get("/logout", user.LogoutAction)
+    m.Post("/logout", user.LogoutAction)
 
     m.Get("/githubcallback", user.GithubCallback)
 

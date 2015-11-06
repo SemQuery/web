@@ -37,8 +37,9 @@ window.onload = function() {
         $('#form').submit();
     }); 
 
-    $('#glogin').click(function() {
-        window.location = "/githubauth"
+    $('#lgbtn').click(function(e) {
+        $('#lgform').submit(); 
+        e.preventDefault();
     });
 
 }

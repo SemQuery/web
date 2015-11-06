@@ -1,4 +1,4 @@
-package home
+package user
 
 import (
     "github.com/semquery/web/app/common"
@@ -6,8 +6,7 @@ import (
     "github.com/martini-contrib/render"
 )
 
-
-func HomePage(user common.User, r render.Render) {
+func MePage(user common.User, r render.Render) {
     data := common.CreateData(user)
-    r.HTML(200, "index", data)
+    r.HTML(200, "me", data)
 }

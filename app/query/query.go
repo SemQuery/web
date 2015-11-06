@@ -23,7 +23,7 @@ var ws_transfer = map[int64][]string{}
 
 //Rendering search page with template data
 func QueryPage(user common.User, r render.Render, req *http.Request) {
-    data := common.CreateData(user, nil)
+    data := common.CreateData(user)
 
     req.ParseForm()
     id := rand.Int63()
@@ -134,13 +134,10 @@ func SocketPage(user common.User, session sessions.Session, r *http.Request, w h
                 progress = Packet {}
                 json.Unmarshal([]byte(msg.Payload), &progress)
                 if progress.Action == "finished" {
-                    find := bson.M {
-                        "repository": repo,
-                    }
-                    update := bson.M {
-                        "status": "completed",
-                    }
+                    find := bson.M { "repository": repo }
+                    update := bson.M { "$set": bson.M { "status": "completed" } }
                     common.Database.C("repositories").Update(find, update)
+                    user.AddIndexed(repo)
                     break;
                 } else {
                     ws.WriteMessage(1, []byte(msg.Payload))

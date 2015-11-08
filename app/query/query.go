@@ -174,7 +174,7 @@ func SocketPage(user common.User, session sessions.Session, r *http.Request, w h
                 "repository": repo,
                 "status": "standby",
             }
-            common.Database.C("repostiories").Insert(doc)
+            common.Database.C("repositories").Insert(doc)
 
             indexJob := IndexingJob {
                 Token: session.Get("token").(string),

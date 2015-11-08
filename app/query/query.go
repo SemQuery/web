@@ -16,7 +16,53 @@ import (
     "strings"
     "encoding/json"
     "io/ioutil"
+
+    "errors"
 )
+
+func SearchPage(user common.User, session sessions.Session, r render.Render, req *http.Request) {
+    src, err := handleSearch(user, req)
+
+    if err != nil {
+        r.Error(400)
+    }
+
+    status := common.GetCodeSourceStatus(src)
+
+    data := common.CreateData(user, nil)
+    data["source_status"] = string(status)
+
+    r.HTML(200, "search", data)
+}
+
+// Creates a CodeSource from the URL query string,
+// returning (source, nil) successful or (nil, error)
+// if a code source could not be created
+func handleSearch(user common.User, req *http.Request) (common.CodeSource, error) {
+    params := req.URL.Query()
+    source := params.Get("source")
+
+    switch source {
+    case common.CodeSourceGitHub:
+        user := params.Get("user")
+        repo := params.Get("repo")
+        if user == "" || repo == "" {
+            return nil, errors.New("User or repository blank")
+        }
+        return &common.RepositorySource{user, repo}, nil
+
+    case common.CodeSourceLink:
+        link     := params.Get("link")
+        url, err := url.Parse(link)
+        if err != nil {
+            return nil, errors.New("Invalid link")
+        }
+        return &common.LinkSource{url}, nil
+
+    default:
+        return nil, errors.New("Invalid source")
+    }
+}
 
 var ws_transfer = map[int64][]string{}
 
@@ -25,12 +71,15 @@ func QueryPage(user common.User, r render.Render, req *http.Request) {
     data := common.CreateData(user, nil)
 
     req.ParseForm()
+    /*
     repoUser := req.FormValue("user")
     repoName := req.FormValue("name")
     status := common.RepositoryStatus(&common.Repository{
         User: repoUser,
         Name: repoName,
     })
+    */
+    status := common.CodeSourceStatusNotFound
 
     data["indexed"] = false
     data["status"]  = status

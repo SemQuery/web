@@ -39,6 +39,10 @@ background: linear-gradient(135deg, rgba(179,227,198,1) 0%, rgba(158,65,32,1) 69
 filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b3e3c6', endColorstr='#a31818', GradientType=1 );
 }
 
+#home-feature-container {
+    margin-top: -55px !important;
+}
+
 #repo-search {
     overflow: hidden;
     font-size: 1.3em;

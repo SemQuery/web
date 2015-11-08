@@ -9,13 +9,14 @@ import (
     "github.com/martini-contrib/sessions"
     "github.com/gorilla/websocket"
 
+    "log"
     "math/rand"
     "strconv"
     "net/http"
     "net/url"
     "strings"
     "encoding/json"
-    "io/ioutil"
+//    "io/ioutil"
 
     "errors"
 )
@@ -29,11 +30,18 @@ func SearchPage(user common.User, session sessions.Session, r render.Render, req
 
     status := common.GetCodeSourceStatus(src)
 
+    id := rand.Int63()
+    params := req.URL.Query()
+    usr := params.Get("user")
+    repo := params.Get("repo")
+    session.Set(id, usr + "/" + repo)
+
     data := struct {
         common.User
         Pagename     string
         SourceStatus string
-    } {user, "search", string(status)}
+        WS_ID int64
+    } {user, "search", string(status), id}
 
     r.HTML(200, "search", data)
 }
@@ -117,6 +125,18 @@ func (p Packet) Send(ws *websocket.Conn) {
     ws.WriteMessage(1, raw)
 }
 
+func InitiateIndex(r *http.Request, session sessions.Session) {
+    r.ParseForm()
+    id, _ := strconv.ParseInt(r.FormValue("id"), 10, 64)
+    repo := session.Get(id).(string)
+    indexJob := IndexingJob {
+        Token: session.Get("token").(string),
+        RepositoryPath: repo,
+    }
+
+    QueueIndexingJob(indexJob)
+}
+
 func SocketPage(user common.User, session sessions.Session, r *http.Request, w http.ResponseWriter) {
     ws, err := websocket.Upgrade(w, r, nil, 1024, 1024)
     if _, ok := err.(websocket.HandshakeError); (ok || err != nil) {
@@ -133,93 +153,36 @@ func SocketPage(user common.User, session sessions.Session, r *http.Request, w h
         return
     }
 
-    arr := ws_transfer[id]
-    query := arr[0]
-    repo := arr[1]
-    delete(ws_transfer, id)
+    repo := session.Get(id).(string)
+    log.Println(repo)
 
     repo_parts := strings.Split(repo, "/")
     if len(repo_parts) < 2 {
         return
     }
 
-    var store bson.M
-    err = common.Database.C("repositories").Find(bson.M {
-       "repository": repo,
-    }).One(&store)
-
-    if err != nil {
-        if user.IsLoggedIn() {
-            repository, _, e := user.Github().Repositories.Get(strings.Split(repo, "/")[0], strings.Split(repo, "/")[1])
-
-            if e != nil {
-                Packet {
-                    Action: "warning",
-                    Payload: map[string]interface{} {
-                        "message": "This repository was not found",
-                    },
-                }.Send(ws)
-                ws.Close()
-                return
-            }
-
-            limit := 1000000
-            if *repository.Size > limit {
-                Packet {
-                    Action: "warning",
-                    Payload: map[string]interface{} {
-                        "message": "This repository exceeds the size limit",
-                    },
-                }.Send(ws)
-                ws.Close()
-                return
-            }
-
-            doc := bson.M {
-                "repository": repo,
-                "status": "standby",
-            }
-            common.Database.C("repositories").Insert(doc)
-
-            indexJob := IndexingJob {
-                Token: session.Get("token").(string),
-                RepositoryPath: repo,
-            }
-
-            QueueIndexingJob(indexJob)
-
-            progress := Packet { "", map[string]interface{} {} }
-            pubsub, _ := common.Rds.Subscribe(repo)
-            for {
-                msg, err := pubsub.ReceiveMessage()
-                if err != nil {
-                    continue
-                }
-                progress = Packet {}
-                json.Unmarshal([]byte(msg.Payload), &progress)
-                if progress.Action == "finished" {
-                    find := bson.M { "repository": repo }
-                    update := bson.M { "$set": bson.M { "status": "completed" } }
-                    common.Database.C("repositories").Update(find, update)
-                    user.AddIndexed(repo)
-                    break;
-                } else {
-                    ws.WriteMessage(1, []byte(msg.Payload))
-                }
-            }
-            pubsub.Close()
-        } else if !user.IsLoggedIn() {
-            Packet {
-                Action: "warning",
-                Payload: map[string]interface{} {
-                    "message": "You must be logged in order to index a repository",
-                },
-            }.Send(ws)
-            ws.Close()
-            return
+    progress := Packet { "", map[string]interface{} {} }
+    pubsub, _ := common.Rds.Subscribe(repo)
+    for {
+        msg, err := pubsub.ReceiveMessage()
+        if err != nil {
+            continue
+        }
+        progress = Packet {}
+        json.Unmarshal([]byte(msg.Payload), &progress)
+        if progress.Action == "finished" {
+            find := bson.M { "repository": repo }
+            update := bson.M { "$set": bson.M { "status": "completed" } }
+            common.Database.C("repositories").Update(find, update)
+            user.AddIndexed(repo)
+            break;
+        } else {
+            ws.WriteMessage(1, []byte(msg.Payload))
         }
     }
+    pubsub.Close()
 
+    /*
     letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
     b := make([]rune, 10)
@@ -239,6 +202,6 @@ func SocketPage(user common.User, session sessions.Session, r *http.Request, w h
 
     body, _ := ioutil.ReadAll(resp.Body)
 
-    ws.WriteMessage(1, body)
+    ws.WriteMessage(1, body) */
     ws.Close()
 }

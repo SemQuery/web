@@ -9,12 +9,14 @@ import (
 func MePage(user common.User, r render.Render) {
     data := struct {
         Loggedin bool
-        Usrname string
+        Username string
         Repos []string
+        Pagename string
     } {
         Loggedin: user.IsLoggedIn(),
-        Usrname: user.Username(),
+        Username: user.Username(),
         Repos: user.GetIndexed(),
+        Pagename: "me",
     }
     r.HTML(200, "me", data)
 }

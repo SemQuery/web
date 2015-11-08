@@ -19,7 +19,7 @@
                         <a class="active item account" href="">{{ .Username }}</a>
                         <form id="lgform" action="/logout" method="POST">
                         </form>
-                        <a class="item" id="lgbtn">Logout</a> 
+                        <a class="item" id="lgbtn" onclick="$('#lgform').submit();">Logout</a> 
                     {{ else }}
                         <a class="item account" href="/login">Sign In</a>
                     {{ end }}

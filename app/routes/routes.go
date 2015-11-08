@@ -13,6 +13,7 @@ func RegisterRoutes(m *martini.ClassicMartini) {
     m.Get("/", home.HomePage)
 
     m.Get("/search", query.SearchPage)
+    m.Post("/index_source", query.InitiateIndex)
 
     m.Post("/query", query.QueryPage)
     m.Get("/socket", query.SocketPage)

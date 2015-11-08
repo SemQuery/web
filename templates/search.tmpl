@@ -1,3 +1,6 @@
+<script>
+    var WS_ID = "{{.WS_ID}}";
+</script>
 <div class="ui inverted black vertical segment">
     <h1>
         Status:
@@ -8,8 +11,14 @@
 {{ if eq .SourceStatus "none" }}
 <div class="ui raised segment">
     There doesn&rsquo;t appear to be anything here.
-    {{ if .IsLoggedIn }}
-        <form action="/index_source" method="post">
+                         <div id="progress-bar" class="ui active progress">
+                            <div id="bar" class="bar" style="width: 0%;">
+                                <div id="progress-label" class="progress">0%</div>
+                            </div>
+                            <div class="label">Progress</div>
+                        </div>
+   {{ if .IsLoggedIn }}
+        <form id="indexaction" action="/index_source" method="post">
             <input type="submit" class="ui huge green basic button" value="Index Source"></input>
         </form>
     {{ else }}

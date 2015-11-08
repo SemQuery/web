@@ -1,8 +1,9 @@
-window.addEventListener("load", function() {
+$("#indexaction").submit(function(e) {
+    e.preventDefault();
+
     if (typeof WS_ID === "undefined") return;
 
-    console.log("Premature exit");
-    return;
+    $.post("index_source", { id: WS_ID });
 
     var url = 'ws://localhost:3000/socket';
     var socket = new WebSocket(url);

@@ -6,12 +6,15 @@ import (
     "github.com/martini-contrib/sessions"
     "github.com/martini-contrib/render"
 
+    "gopkg.in/mgo.v2/bson"
+
     "net/http"
     "net/url"
     "strings"
     "math/rand"
     "encoding/json"
     "io/ioutil"
+    "strconv"
 )
 
 func LogoutAction(session sessions.Session, re render.Render) {
@@ -89,10 +92,21 @@ func GithubCallback(session sessions.Session, r *http.Request, re render.Render)
 
     json.Unmarshal([]byte(string(body)), &parse)
 
-    username := parse["login"].(string)
+    username, id := parse["login"].(string), strconv.FormatFloat(parse["id"].(float64), 'f', -1, 64)
+
+    var usrdata bson.M
+    err := common.Database.C("users").Find(bson.M { "id": id }).One(&usrdata)
+    if err != nil {
+        usrdata = bson.M {
+            "id": id,
+            "repos": []string {},
+        }
+        common.Database.C("users").Insert(usrdata)
+    }
 
     session.Set("loggedin", true)
     session.Set("username", username)
+    session.Set("id", id)
     session.Set("token", token)
 
     redirectTo := session.Get("redirect_to")

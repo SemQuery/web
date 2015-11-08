@@ -3,21 +3,46 @@ package common
 import (
     "github.com/go-martini/martini"
     "github.com/martini-contrib/sessions"
-
     "golang.org/x/oauth2"
     "github.com/google/go-github/github"
+
+    "gopkg.in/mgo.v2/bson"
 )
 
 type User interface {
     IsLoggedIn() bool
     Username() string
+    Id() string
+    AddIndexed(string)
+    GetIndexed() []string
     Github() *github.Client
 }
 
 type user struct {
     isLoggedIn bool
-    username string
+    username, id string
     github *github.Client
+}
+
+func (u user) AddIndexed(repo string) {
+    list := append(u.GetIndexed(), repo)
+
+    query := bson.M { "id": u.id }
+    updt := bson.M { "$set": bson.M { "repos": list } }
+
+    Database.C("users").Update(query, updt)
+}
+
+func (u user) GetIndexed() []string {
+    var usrdat bson.M
+    query := bson.M { "id": u.id }
+    list := []string {}
+    if err := Database.C("users").Find(query).One(&usrdat); err == nil {
+        for _, s := range usrdat["repos"].([]interface{}) {
+            list = append(list, s.(string))
+        }
+    }
+    return list
 }
 
 func (u user) IsLoggedIn() bool {
@@ -32,12 +57,17 @@ func (u user) Github() *github.Client {
     return u.github
 }
 
+func (u user) Id() string {
+    return u.id
+}
+
 func UserInject(session sessions.Session, ctx martini.Context) {
-    u := user { isLoggedIn: false, username: "", github: nil }
+    u := user { isLoggedIn: false, username: "", id: "", github: nil }
 
     if session.Get("loggedin") != nil {
         u.isLoggedIn = true
         u.username = session.Get("username").(string)
+        u.id = session.Get("id").(string)
 
         ts := oauth2.StaticTokenSource(
             &oauth2.Token {AccessToken: session.Get("token").(string)},
@@ -68,4 +98,3 @@ func CreateData(user User, session sessions.Session) map[string]interface{} {
     }
     return data
 }
-

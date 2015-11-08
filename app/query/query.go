@@ -68,7 +68,14 @@ var ws_transfer = map[int64][]string{}
 
 //Rendering search page with template data
 func QueryPage(user common.User, r render.Render, req *http.Request) {
-    data := common.CreateData(user, nil)
+    data := struct {
+        Loggedin, Indexed bool
+        Usrname, Query string
+        Ws_id int64
+    } {
+        Loggedin: user.IsLoggedIn(),
+        Usrname: user.Username(),
+    }
 
     req.ParseForm()
     /*
@@ -79,11 +86,6 @@ func QueryPage(user common.User, r render.Render, req *http.Request) {
         Name: repoName,
     })
     */
-    status := common.CodeSourceStatusNotFound
-
-    data["indexed"] = false
-    data["status"]  = status
-
 
     // id := rand.Int63()
     // data["ws_id"] = id
@@ -97,7 +99,7 @@ func QueryPage(user common.User, r render.Render, req *http.Request) {
     //     data["indexed"] = true
     // }
 
-    data["query"] = req.FormValue("q")
+    data.Query = req.FormValue("q")
 
     r.HTML(200, "query", data)
 }
@@ -193,13 +195,10 @@ func SocketPage(user common.User, session sessions.Session, r *http.Request, w h
                 progress = Packet {}
                 json.Unmarshal([]byte(msg.Payload), &progress)
                 if progress.Action == "finished" {
-                    find := bson.M {
-                        "repository": repo,
-                    }
-                    update := bson.M {
-                        "status": "completed",
-                    }
+                    find := bson.M { "repository": repo }
+                    update := bson.M { "$set": bson.M { "status": "completed" } }
                     common.Database.C("repositories").Update(find, update)
+                    user.AddIndexed(repo)
                     break;
                 } else {
                     ws.WriteMessage(1, []byte(msg.Payload))

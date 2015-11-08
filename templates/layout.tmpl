@@ -18,7 +18,6 @@
                     {{ if .loggedin }} 
                         <a class="active item account" href="">{{ .username }}</a>
                         <form id="lgform" action="/logout" method="POST">
-                            <input type="hidden" class="item" />
                         </form>
                         <a class="item" id="lgbtn">Logout</a> 
                     {{ else }}

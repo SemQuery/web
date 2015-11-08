@@ -1,0 +1,16 @@
+<div class="sunset-background-slate background-slate-fixed"></div>
+</div>
+<div class="main-content ui page grid">
+    <div class="valigned">
+        <span>
+        <div class="ui vertical menu">
+            <a class="active teal item">
+                Indexed Repositories 
+            </a>
+            {{ range $index, $element := .Repos }}
+                <div class="item"> {{ $element }} </div> 
+            {{ end }}
+        </div>
+        </span>
+    </div>
+</div>

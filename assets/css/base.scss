@@ -14,7 +14,7 @@ body, input, .ui, h1, h2, h3, h4, h5 {
 }
 
 .ui.menu-transparent .image {
-    @include filter(invert, 100%);
+    // @include filter(invert, 100%);
 }
 
 .columns-desc {

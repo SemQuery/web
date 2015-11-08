@@ -39,6 +39,10 @@ background: linear-gradient(135deg, rgba(179,227,198,1) 0%, rgba(158,65,32,1) 69
 filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b3e3c6', endColorstr='#a31818', GradientType=1 );
 }
 
+#home-feature-container {
+    margin-top: -55px !important;
+}
+
 #repo-search {
     overflow: hidden;
     font-size: 1.3em;
@@ -82,7 +86,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b3e3c6', end
     max-height: 200px;
 }
 
-.learn-more {
+#learn-more {
     color: white;
     position: absolute;
     bottom: 0;
@@ -90,8 +94,43 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b3e3c6', end
     right: 0;
     margin: 0 auto;
     margin-bottom: 15px;
+    transition: color 0.2s;
 }
 
-.learn-more:hover {
+#learn-more:hover {
     color: #001050;
+}
+
+#source-picker > .item {
+    border-left-color: white;
+}
+
+#source-picker > .item > a {
+    color: white;
+    text-decoration: underline;
+}
+
+.source-input > .input {
+    display: inline-block !important;
+}
+
+#github-source-input, #link-source-input {
+    width: 400px;
+    margin: 0 auto;
+}
+
+#link-source-input .input {
+    width: 400px;
+}
+
+.github-separator::after {
+    margin: 0 5px;
+    content: "/";
+    color: white;
+    font-size: 1.5em;
+}
+
+#search-button {
+    width: 400px;
+    font-weight: lighter !important;
 }

@@ -1,10 +1,54 @@
 <div class="sunset-background-slate"></div>
-<div class="main-content ui page grid">
+<div id="home-feature-container" class="main-content ui page grid">
     <div class="valigned">
         <img src="/images/logo_v2_white.svg" class="llogo"></img>
         <br>
-        <form action="/query" method="POST">
-            
+        <div id="source-picker" class="ui large divided horizontal list">
+            <div class="item">
+                <a id="source-picker-github" href="#">GitHub</a>
+            </div>
+            <div class="item">
+                <a id="source-picker-link" href="#">Link</a>
+            </div>
+            <div class="item">
+                <a id="source-picker-upload" href="#">Upload</a>
+            </div>
+        </div>
+        <form class="ui form" id="source-form" action="/search" method="GET">
+            <div id="github-source-input" class="source-input">
+                <input type="hidden" name="source" value="github">
+                <div class="inline fields" style="position: relative">
+                    <div class="ui huge icon input">
+                        <input placeholder="User" name="user">
+                        <i class="user icon"></i>
+                    </div>
+                    <span class="github-separator"></span>
+                    <div class="ui huge icon input">
+                        <input placeholder="Repository" name="repo">
+                        <i class="github icon"></i>
+                    </div> 
+                </div>
+            </div>
+            <div id="link-source-input" class="source-input" style="display: none">
+                <input type="hidden" name="source" value="link">
+                <div class="inline fields">
+                    <div class="ui huge icon input">
+                        <input placeholder="Git clone URL" name="link">
+                        <i class="git icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="search-button" class="ui huge white inverted button">
+                Semantic Search
+                <i class="right circle arrow icon"></i>
+            </button>
+        </form>
+
+        <br>
+
+        <!-- old repository input disabled -->
+        <form action="/query" method="POST" style="display: none">
             <div id="repo-search" class="ui search">
                 <div class="ui icon input">
                     <input id="repo-input" class="prompt" type="text" placeholder="user/repository"
@@ -17,14 +61,16 @@
             <input id="query-form-value" type="hidden" name="q">
         </form>
         <br>
-        <div class="explain-phase-container no-mobile">
+        <!-- "diagram" disabled for now -->
+        <div class="explain-phase-container no-mobile" style="display: none">
             <div class="explain-phase phase-1">
                 <img src="/images/code_pages.svg">
             </div>
             <div class="explain-phase phase-2">
                 <span>
                     <i class="arrow right icon"></i>
-                    <code class="code-well">definition(name: "db_provider")</code>
+                    <!-- <code class="code-well">definition(name: "db_provider")</code> -->
+                    <span style="font-size: 1.7em">Semantic Query</span>
                     <i class="arrow right icon"></i>
                 </span>
             </div>
@@ -32,7 +78,7 @@
                 <img src="/images/code_pages_query.svg">
             </div>
         </div>
-        <a class="learn-more" href="javascript:learnMore()">
+        <a id="learn-more" href="#">
             <h2 class="light-text">
                 Learn More
                 <i class="angle down icon"></i>

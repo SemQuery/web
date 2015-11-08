@@ -1,6 +1,21 @@
-{{ range $index, $element := .repos }}
-    <div class="ui segment">
-        <h4 class="ui header">{{ $element.name }}</h4>
-        <p>{{ $element.description }}</p>
-    </div>
+<div class="ui inverted black vertical segment">
+    <h1>
+        Status:
+        {{ .source_status }}
+    </h1>
+</div>
+
+{{ if eq .source_status "none" }}
+<div class="ui raised segment">
+    There doesn&rsquo;t appear to be anything here.
+    {{ if .loggedin }}
+        <form action="/index_source" method="post">
+            <input type="submit" class="ui huge green basic button" value="Index Source"></input>
+        </form>
+    {{ else }}
+        <a href="/login?redirect_back=true" class="ui huge blue basic button">
+            Sign in to index source
+        </a>
+    {{ end }}
+</div>
 {{ end }}

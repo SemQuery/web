@@ -1,8 +1,16 @@
 <div class="sunset-background-slate background-slate-fixed"></div>
-<div class="query-container ui container" style="margin-left: 10%; margin-right: 10%">
-     <div class="ui vertical menu">
+</div>
+<div class="main-content ui page grid">
+    <div class="valigned">
+        <span>
+        <div class="ui vertical menu">
+            <a class="active teal item">
+                Indexed Repositories 
+            </a>
             {{ range $index, $element := .Repos }}
-                <div id="active teal item"> {{ $element }} </div> 
+                <div class="item"> {{ $element }} </div> 
             {{ end }}
-     </div>
+        </div>
+        </span>
+    </div>
 </div>

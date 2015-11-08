@@ -13,9 +13,8 @@
                 <a href="/"><img src="/images/logo_v2_small.svg" class="logo ui image"></img></a>
                 <div class="right menu">
                     {{ if .Loggedin }} 
-                        <a class="active item account" href="">{{ .Usrname }}</a>
+                        <a class="active item account" href="/me">{{ .Usrname }}</a>
                         <form id="lgform" action="/logout" method="POST">
-                            <input type="hidden" class="item" />
                         </form>
                         <a class="item" id="lgbtn">Logout</a> 
                     {{ else }}

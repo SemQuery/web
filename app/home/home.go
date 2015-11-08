@@ -9,11 +9,8 @@ import (
 
 func HomePage(user common.User, r render.Render) {
     data := struct {
-        Loggedin bool
-        Usrname string
-    } {
-        Loggedin: user.IsLoggedIn(),
-        Usrname: user.Username(),
-    }
+        common.User
+        Pagename string
+    } {user, "home"}
     r.HTML(200, "index", data)
 }

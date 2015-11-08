@@ -29,8 +29,11 @@ func SearchPage(user common.User, session sessions.Session, r render.Render, req
 
     status := common.GetCodeSourceStatus(src)
 
-    data := common.CreateData(user, nil)
-    data["source_status"] = string(status)
+    data := struct {
+        common.User
+        Pagename     string
+        SourceStatus string
+    } {user, "search", string(status)}
 
     r.HTML(200, "search", data)
 }

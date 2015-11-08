@@ -1,14 +1,14 @@
 <div class="ui inverted black vertical segment">
     <h1>
         Status:
-        {{ .source_status }}
+        {{ .SourceStatus }}
     </h1>
 </div>
 
-{{ if eq .source_status "none" }}
+{{ if eq .SourceStatus "none" }}
 <div class="ui raised segment">
     There doesn&rsquo;t appear to be anything here.
-    {{ if .loggedin }}
+    {{ if .IsLoggedIn }}
         <form action="/index_source" method="post">
             <input type="submit" class="ui huge green basic button" value="Index Source"></input>
         </form>

@@ -8,15 +8,15 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
     </head>
     <body>
-        {{ if .pagename }}
-            <script>var CURRENT_PAGE = "{{ .pagename }}";</script>
+        {{ if .Pagename }}
+            <script>var CURRENT_PAGE = "{{ .Pagename }}";</script>
         {{ end }}
         <div id="main-navbar" class="menu-transparent ui secondary pointing menu navigation">
             <div class="ui container">
                 <a href="/"><img src="/images/logo_v2_white.svg" class="logo ui image"></img></a>
                 <div class="right menu">
-                    {{ if .loggedin }} 
-                        <a class="active item account" href="">{{ .username }}</a>
+                    {{ if .IsLoggedIn }} 
+                        <a class="active item account" href="">{{ .Username }}</a>
                         <form id="lgform" action="/logout" method="POST">
                         </form>
                         <a class="item" id="lgbtn">Logout</a> 

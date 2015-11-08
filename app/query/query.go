@@ -9,7 +9,6 @@ import (
     "github.com/martini-contrib/sessions"
     "github.com/gorilla/websocket"
 
-    "os"
     "math/rand"
     "strconv"
     "net/http"
@@ -17,7 +16,53 @@ import (
     "strings"
     "encoding/json"
     "io/ioutil"
+
+    "errors"
 )
+
+func SearchPage(user common.User, session sessions.Session, r render.Render, req *http.Request) {
+    src, err := handleSearch(user, req)
+
+    if err != nil {
+        r.Error(400)
+    }
+
+    status := common.GetCodeSourceStatus(src)
+
+    data := common.CreateData(user, nil)
+    data["source_status"] = string(status)
+
+    r.HTML(200, "search", data)
+}
+
+// Creates a CodeSource from the URL query string,
+// returning (source, nil) successful or (nil, error)
+// if a code source could not be created
+func handleSearch(user common.User, req *http.Request) (common.CodeSource, error) {
+    params := req.URL.Query()
+    source := params.Get("source")
+
+    switch source {
+    case common.CodeSourceGitHub:
+        user := params.Get("user")
+        repo := params.Get("repo")
+        if user == "" || repo == "" {
+            return nil, errors.New("User or repository blank")
+        }
+        return &common.RepositorySource{user, repo}, nil
+
+    case common.CodeSourceLink:
+        link     := params.Get("link")
+        url, err := url.Parse(link)
+        if err != nil {
+            return nil, errors.New("Invalid link")
+        }
+        return &common.LinkSource{url}, nil
+
+    default:
+        return nil, errors.New("Invalid source")
+    }
+}
 
 var ws_transfer = map[int64][]string{}
 
@@ -33,17 +78,26 @@ func QueryPage(user common.User, r render.Render, req *http.Request) {
     }
 
     req.ParseForm()
-    id := rand.Int63()
-    data.Ws_id = id
-    ws_transfer[id] = []string{req.FormValue("q"), req.FormValue("repo")}
+    /*
+    repoUser := req.FormValue("user")
+    repoName := req.FormValue("name")
+    status := common.RepositoryStatus(&common.Repository{
+        User: repoUser,
+        Name: repoName,
+    })
+    */
 
-    path := "_repos/" + req.FormValue("repo")
+    // id := rand.Int63()
+    // data["ws_id"] = id
+    // ws_transfer[id] = []string{req.FormValue("q"), req.FormValue("repo")}
 
-    if _, err := os.Stat(path); os.IsNotExist(err) {
-        data.Indexed = false
-    } else {
-        data.Indexed = true
-    }
+    // path := "_repos/" + req.FormValue("repo")
+
+    // if _, err := os.Stat(path); os.IsNotExist(err) {
+    //     data["indexed"] = false
+    // } else {
+    //     data["indexed"] = true
+    // }
 
     data.Query = req.FormValue("q")
 

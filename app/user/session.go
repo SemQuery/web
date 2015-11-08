@@ -6,7 +6,7 @@ import (
     "github.com/martini-contrib/sessions"
     "github.com/martini-contrib/render"
 
-    "labix.org/v2/mgo/bson"
+    "gopkg.in/mgo.v2/bson"
 
     "net/http"
     "net/url"
@@ -22,7 +22,7 @@ func LogoutAction(session sessions.Session, re render.Render) {
     re.Redirect("/")
 }
 
-func Login(session sessions.Session, re render.Render) {
+func Login(session sessions.Session, re render.Render, r *http.Request) {
     client_id := common.Config.OAuth2Client_ID
 
     letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -33,7 +33,26 @@ func Login(session sessions.Session, re render.Render) {
     }
     session.AddFlash(string(b), "state")
 
-    re.Redirect("https://github.com/login/oauth/authorize?client_id=" + client_id + "&state=" + string(b))
+    redirectBack := r.URL.Query().Get("redirect_back")
+    ref          := r.Referer()
+
+    if redirectBack == "true" && ref != "" {
+        session.Set("redirect_to", ref)
+    } else {
+        session.Set("redirect_to", nil)
+    }
+
+    query := url.Values{}
+    query.Set("client_id", client_id)
+    query.Set("state", string(b))
+
+    dest := url.URL{
+        Scheme:   "https",
+        Host:     "github.com",
+        Path:     "/login/oauth/authorize",
+        RawQuery: query.Encode(),
+    }
+    re.Redirect(dest.String())
 }
 
 func GithubCallback(session sessions.Session, r *http.Request, re render.Render) {
@@ -89,6 +108,13 @@ func GithubCallback(session sessions.Session, r *http.Request, re render.Render)
     session.Set("username", username)
     session.Set("id", id)
     session.Set("token", token)
-    re.Redirect("/")
+
+    redirectTo := session.Get("redirect_to")
+    if redirectTo != nil {
+        re.Redirect(redirectTo.(string))
+    } else {
+        re.Redirect("/")
+    }
+    session.Set("redirect_to", nil)
 }
 

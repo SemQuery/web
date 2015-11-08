@@ -7,8 +7,8 @@ import (
 )
 
 func ExtensionPage(w http.ResponseWriter, r *http.Request, re render.Render) {
-    re.HTML(200, "cextension", map[string]string {
-        "loggedin": "false",
+    re.HTML(200, "cextension", map[string]interface{} {
+        "loggedin": false,
         "q": r.URL.Query().Get("q"),
         "repo": r.URL.Query().Get("repo"),
     })

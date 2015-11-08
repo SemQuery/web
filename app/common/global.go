@@ -1,7 +1,6 @@
 package common
 
 import (
-    "gopkg.in/mgo.v2"
     "gopkg.in/redis.v3"
 
     "github.com/aws/aws-sdk-go/service/sqs"
@@ -30,7 +29,6 @@ type config struct {
 
 var Config *config = &config{}
 
-var Database *mgo.Database
 var Rds *redis.Client
 
 var Queue *sqs.SQS

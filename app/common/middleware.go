@@ -1,14 +1,12 @@
 package common
 
 import (
-
     "github.com/go-martini/martini"
     "github.com/martini-contrib/sessions"
     "golang.org/x/oauth2"
     "github.com/google/go-github/github"
 
-    "labix.org/v2/mgo/bson"
-
+    "gopkg.in/mgo.v2/bson"
 )
 
 type User interface {
@@ -82,4 +80,21 @@ func UserInject(session sessions.Session, ctx martini.Context) {
     }
 
     ctx.MapTo(u, (*User) (nil))
+}
+
+func CreateData(user User, session sessions.Session) map[string]interface{} {
+    data := map[string]interface{} {
+        "loggedin": user.IsLoggedIn(),
+        "message": "",
+    }
+    if user.IsLoggedIn() {
+        data["username"] = user.Username()
+    }
+    if session != nil {
+        flashes := session.Flashes("message")
+        if len(flashes) != 0 {
+            data["message"] = flashes[0].(string)
+        }
+    }
+    return data
 }

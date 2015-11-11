@@ -1,16 +1,10 @@
 $("#indexaction").submit(function(e) {
     e.preventDefault();
 
-    if (typeof WS_ID === "undefined") return;
+    $.post("index_source", { search: location.search });
 
-    $.post("index_source", { id: WS_ID });
-
-    var url = 'ws://localhost:3000/socket';
+    var url = 'ws://localhost:3000/socket?' + location.search;
     var socket = new WebSocket(url);
-
-    socket.onopen = function() {
-        socket.send("" + WS_ID);
-    };
 
     var results = $("#query-results");
 

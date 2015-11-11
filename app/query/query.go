@@ -9,9 +9,9 @@ import (
     "github.com/martini-contrib/sessions"
     "github.com/gorilla/websocket"
 
-    "log"
+//    "log"
     "math/rand"
-    "strconv"
+//    "strconv"
     "net/http"
     "net/url"
     "strings"
@@ -127,11 +127,10 @@ func (p Packet) Send(ws *websocket.Conn) {
 
 func InitiateIndex(r *http.Request, session sessions.Session) {
     r.ParseForm()
-    id, _ := strconv.ParseInt(r.FormValue("id"), 10, 64)
-    repo := session.Get(id).(string)
+    params, _ := url.ParseQuery(r.FormValue("search"))
     indexJob := IndexingJob {
         Token: session.Get("token").(string),
-        RepositoryPath: repo,
+        RepositoryPath: params.Get("user") + "/" + params.Get("repo"),
     }
 
     QueueIndexingJob(indexJob)
@@ -143,18 +142,8 @@ func SocketPage(user common.User, session sessions.Session, r *http.Request, w h
         return
     }
 
-    _, msg, err := ws.ReadMessage()
-    if err != nil {
-        return
-    }
-
-    id, err := strconv.ParseInt(string(msg), 10, 64)
-    if err != nil {
-        return
-    }
-
-    repo := session.Get(id).(string)
-    log.Println(repo)
+    params := r.URL.Query()
+    repo := params.Get("user") + "/" + params.Get("repo")
 
     repo_parts := strings.Split(repo, "/")
     if len(repo_parts) < 2 {
@@ -177,7 +166,7 @@ func SocketPage(user common.User, session sessions.Session, r *http.Request, w h
             user.AddIndexed(repo)
             break;
         } else {
-            ws.WriteMessage(1, []byte(msg.Payload))
+            progress.Send(ws)
         }
     }
     pubsub.Close()

@@ -61,3 +61,14 @@ func GetCodeSourceStatus(src CodeSource) CodeSourceStatus {
         return CodeSourceStatusNotFound
     }
 }
+
+func UpdateStatus(src CodeSource, status CodeSourceStatus) {
+    query := src.ToQuery()
+    if GetCodeSourceStatus(src) != CodeSourceStatusNotFound {
+        doc := bson.M { "$set": bson.M { "status": status } }
+        Database.C(CodeSourceColl).Update(query, doc)
+    } else {
+        query["status"] = status
+        Database.C(CodeSourceColl).Insert(query)
+    }
+}

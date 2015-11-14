@@ -1,38 +1,40 @@
 $("#indexaction").submit(function(e) {
     e.preventDefault();
 
-    $.post("index_source", { search: location.search });
+    $.post("index_source", {
+         search: location.search 
+    }).done(function(data) {
+        var callback = JSON.parse(data);
+        switch(callback.action) {
+        case "warning":
+            $("#message").text(callback.payload.message);
+            break;
+        case "success":
+            var url = 'ws://localhost:3000/socket?' + location.search;
+            var socket = new WebSocket(url);
 
-    var url = 'ws://localhost:3000/socket?' + location.search;
-    var socket = new WebSocket(url);
-
-    var results = $("#query-results");
-
-    socket.onmessage = function(event) {
-        console.log(event.data);
-        var packet = JSON.parse(event.data);
-        switch (packet.action) {
-            case "results":
-                $('#search-res-count').text("Found results in " + packet.payload.files + " files");
-                for (var i = 0; i != packet.payload.found.length; i++) {
-                    populateCode(packet.payload.found[i]);
+            socket.onmessage = function(event) {
+                console.log(event.data);
+                var packet = JSON.parse(event.data);
+                switch (packet.action) {
+                case "warning":
+                    $("#message").text(packet.payload.message);
+                    break;
+                case "indexing":
+                    $("#query-results").html("Indexed <b>" + packet.payload.lines + "</b> lines in <b>" + packet.payload.files + "</b> files (<b>" + packet.payload.percent + "</b>%)"); 
+                    $("#bar").attr("style", "width: " + packet.payload.percent + "%");
+                    $("#progress-label").text(packet.payload.percent + "%");
+                    if (packet.payload.percent == "100") {
+                        var pBar = $("#progress-bar");
+                        var cssClasses = pBar.attr("class");
+                        pBar.attr("class", cssClasses + " success");
+                    }
+                    break;
                 }
-                break;
-            case "warning":
-                results.text(packet.payload.message);
-                break;
-            case "indexing":
-                results.html("Indexed <b>" + packet.payload.lines + "</b> lines in <b>" + packet.payload.files + "</b> files (<b>" + packet.payload.percent + "</b>%)"); 
-                $("#bar").attr("style", "width: " + packet.payload.percent + "%");
-                $("#progress-label").text(packet.payload.percent + "%");
-                if (packet.payload.message == "100") {
-                    var pBar = $("#progress-bar");
-                    var cssClasses = pBar.attr("class");
-                    pBar.attr("class", cssClasses + " success");
-                }
-                break;
+            }
+            break;
         }
-    }
+    });
 });
 
 function populateCode(json) {
@@ -82,8 +84,6 @@ function populateCode(json) {
         var highlight = document.createElement("DIV");
         highlight.setAttribute("class", "highlight");
         if (count == 0) {
-            // first line
-            
             var normalData = line.substring(0, relStart);
             var normal = document.createTextNode(normalData);
             if (total == 1) {
@@ -99,7 +99,6 @@ function populateCode(json) {
                 pre.appendChild(normal);
             }
         } else if (count == total - 1 && total > 1) {
-            // last 
             highlight.innerText = line.substring(0, relEnd);
             pre.append(highlight);
             var normalData = line.substring(relEnd);
@@ -109,7 +108,6 @@ function populateCode(json) {
             highlight.innerText = line;
             pre.appendChild(highlight);
         }
-        // pre.innerText = line;
         td.appendChild(pre);
         tr.appendChild(td);
 
@@ -121,8 +119,4 @@ function populateCode(json) {
     document.getElementById("search-results").appendChild(table);
     var br = document.createElement("BR");
     document.getElementById("search-results").appendChild(br);
-}
-
-function searchResCount(c) {
-    $('#search-res-count').text("Found results in " + c + " files");
 }

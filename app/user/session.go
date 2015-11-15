@@ -43,6 +43,7 @@ func Login(session sessions.Session, re render.Render, r *http.Request) {
     query := url.Values{}
     query.Set("client_id", client_id)
     query.Set("state", string(b))
+    query.Set("scope", "repo")
 
     dest := url.URL{
         Scheme:   "https",

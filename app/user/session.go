@@ -6,8 +6,6 @@ import (
     "github.com/martini-contrib/sessions"
     "github.com/martini-contrib/render"
 
-    "gopkg.in/mgo.v2/bson"
-
     "net/http"
     "net/url"
     "strings"
@@ -65,6 +63,8 @@ func GithubCallback(session sessions.Session, r *http.Request, re render.Render)
         return
     }
 
+    client := &http.Client {}
+
     form := url.Values {}
     form.Add("code", code)
     form.Add("client_id", client_id)
@@ -73,35 +73,24 @@ func GithubCallback(session sessions.Session, r *http.Request, re render.Render)
     req, _ := http.NewRequest("POST", "https://github.com/login/oauth/access_token/", strings.NewReader(form.Encode()))
     req.Header.Set("Accept", "application/json")
 
-    client := &http.Client {}
     resp, _ := client.Do(req)
-
     body, _ := ioutil.ReadAll(resp.Body)
-
     parse := map[string]interface{} {}
     json.Unmarshal([]byte(string(body)), &parse)
 
     token := parse["access_token"].(string)
 
     req, _ = http.NewRequest("GET", "https://api.github.com/user?access_token=" + token, nil)
+
     resp, _ = client.Do(req)
-
     body, _ = ioutil.ReadAll(resp.Body)
-
     parse = map[string]interface{} {}
-
     json.Unmarshal([]byte(string(body)), &parse)
 
     username, id := parse["login"].(string), strconv.FormatFloat(parse["id"].(float64), 'f', -1, 64)
 
-    var usrdata bson.M
-    err := common.Database.C("users").Find(bson.M { "id": id }).One(&usrdata)
-    if err != nil {
-        usrdata = bson.M {
-            "id": id,
-            "repos": []string {},
-        }
-        common.Database.C("users").Insert(usrdata)
+    if !common.UserExist(id) {
+        common.NewUser(id)
     }
 
     session.Set("loggedin", true)

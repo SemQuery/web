@@ -1,12 +1,13 @@
 package common
 
 import (
+    "gopkg.in/mgo.v2"
     "gopkg.in/mgo.v2/bson"
 
     "net/url"
 )
 
-const CodeSourceColl = "sources"
+var CodeSourceColl *mgo.Collection
 
 const (
     CodeSourceGitHub = "github"
@@ -53,7 +54,7 @@ func GetCodeSourceStatus(src CodeSource) CodeSourceStatus {
     doc := src.ToQuery()
 
     var res bson.M
-    err := Database.C(CodeSourceColl).Find(doc).One(&res)
+    err := CodeSourceColl.Find(doc).One(&res)
 
     if err == nil {
         return CodeSourceStatus(res["status"].(string))
@@ -66,9 +67,9 @@ func UpdateStatus(src CodeSource, status CodeSourceStatus) {
     query := src.ToQuery()
     if GetCodeSourceStatus(src) != CodeSourceStatusNotFound {
         doc := bson.M { "$set": bson.M { "status": status } }
-        Database.C(CodeSourceColl).Update(query, doc)
+        CodeSourceColl.Update(query, doc)
     } else {
         query["status"] = status
-        Database.C(CodeSourceColl).Insert(query)
+        CodeSourceColl.Insert(query)
     }
 }

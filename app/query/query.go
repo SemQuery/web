@@ -4,6 +4,7 @@ import (
     "github.com/semquery/web/app/common"
 
 
+    "github.com/google/go-github/github"
     "github.com/martini-contrib/render"
     "github.com/martini-contrib/sessions"
     "github.com/gorilla/websocket"
@@ -13,7 +14,7 @@ import (
 //    "strconv"
     "net/http"
     "net/url"
-    "strings"
+//    "strings"
     "encoding/json"
 //    "io/ioutil"
 
@@ -93,13 +94,21 @@ func InitiateIndex(user common.User, r *http.Request, session sessions.Session) 
         return Packet {
             Action: "warning",
             Payload: map[string]interface{} {
-                "message": "You are not logged in.",
+                "message": "You are not logged in",
             },
         }.Json()
     }
 
     r.ParseForm()
     params, _ := url.ParseQuery(r.FormValue("search"))
+    if params.Get("user") == "" || params.Get("repo") == "" {
+        return Packet {
+            Action: "warning",
+            Payload: map[string]interface{} {
+                "message": "Null repository owner or name",
+            },
+        }.Json()
+    }
 
     repo := &common.RepositorySource {
         User: params.Get("user"),
@@ -111,6 +120,28 @@ func InitiateIndex(user common.User, r *http.Request, session sessions.Session) 
             Action: "warning",
             Payload: map[string]interface{} {
                 "message": "This repository is either already indexed or is currently being indexed",
+            },
+        }.Json()
+    }
+
+    _, _, e := user.Github().Repositories.Get(repo.User, repo.Name)
+
+    if e != nil {
+        return Packet {
+            Action: "warning",
+            Payload: map[string]interface{} {
+                "message": "This repository does not exist",
+            },
+        }.Json()
+    }
+
+    _, _, e = github.NewClient(nil).Repositories.Get(repo.User, repo.Name)
+
+    if e != nil && user.GetPlan()["name"] == "normal" {
+        return Packet {
+            Action: "warning",
+            Payload: map[string]interface{} {
+                "message": "You must be on a paid plan in order to index a private repository",
             },
         }.Json()
     }
@@ -145,21 +176,28 @@ func InitiateIndex(user common.User, r *http.Request, session sessions.Session) 
 }
 
 func SocketPage(user common.User, session sessions.Session, r *http.Request, w http.ResponseWriter) {
+
+    params := r.URL.Query()
+    if params.Get("user") == "" || params.Get("repo") == "" {
+        return
+    }
+
+    repo := &common.RepositorySource {
+        User: params.Get("user"),
+        Name: params.Get("repo"),
+    }
+
+    if common.GetCodeSourceStatus(repo) != common.CodeSourceStatusWorking {
+        return
+    }
+
     ws, err := websocket.Upgrade(w, r, nil, 1024, 1024)
     if _, ok := err.(websocket.HandshakeError); (ok || err != nil) {
         return
     }
 
-    params := r.URL.Query()
-    repo := params.Get("user") + "/" + params.Get("repo")
-
-    repo_parts := strings.Split(repo, "/")
-    if len(repo_parts) < 2 {
-        return
-    }
-
     progress := Packet { "", map[string]interface{} {} }
-    pubsub, _ := common.Rds.Subscribe(repo)
+    pubsub, _ := common.Rds.Subscribe(repo.User + "/" + repo.Name)
     defer pubsub.Close()
     for {
         msg, err := pubsub.ReceiveMessage()
@@ -171,7 +209,7 @@ func SocketPage(user common.User, session sessions.Session, r *http.Request, w h
         json.Unmarshal([]byte(msg.Payload), &progress)
         progress.Send(ws)
         if progress.Action == "finished" {
-            user.AddIndexed(repo)
+            user.AddIndexed(repo.User + "/" + repo.Name)
             break;
         }
     }

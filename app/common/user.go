@@ -78,7 +78,26 @@ func (u user) GetPlan() map[string]string {
     query := bson.M { "id": u.id }
     UsersColl.Find(query).One(&usrdat)
 
-    return usrdat["plan"].(map[string]string)
+    storedplan := usrdat["plan"].(bson.M)
+
+    plan := map[string]string {}
+    format := "2 1 2006"
+    expire, e := time.Parse(format, storedplan["expire"].(string))
+    if e != nil && expire.After(time.Now()) {
+        plan["name"] = storedplan["name"].(string)
+        plan["expire"] = storedplan["expire"].(string)
+    } else {
+        plan["name"] = "normal"
+        plan["expire"] = "0"
+
+        UsersColl.Update(query, bson.M {
+            "$set": bson.M {
+                "plans": plan,
+            },
+        })
+    }
+
+    return plan
 }
 
 func (u user) IsLoggedIn() bool {

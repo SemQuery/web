@@ -11,9 +11,12 @@ import (
 )
 
 type IndexingJob struct {
-    Token string
+    Type string
 
+    Token string
     RepositoryPath string
+
+    Link string
 }
 
 func (job IndexingJob) toJson() string {

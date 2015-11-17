@@ -32,6 +32,8 @@ func initDB() {
     }
 
     common.Database = session.DB(common.Config.DBName)
+    common.UsersColl = common.Database.C("users")
+    common.CodeSourceColl = common.Database.C("sources")
     log.Print("Database online")
 
     common.Rds = redis.NewClient(&redis.Options {

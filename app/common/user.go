@@ -6,8 +6,14 @@ import (
     "golang.org/x/oauth2"
     "github.com/google/go-github/github"
 
+    "gopkg.in/mgo.v2"
     "gopkg.in/mgo.v2/bson"
+
+    "time"
+    "strconv"
 )
+
+var UsersColl *mgo.Collection
 
 type User interface {
     IsLoggedIn() bool
@@ -15,6 +21,7 @@ type User interface {
     Id() string
     AddIndexed(string)
     GetIndexed() []string
+    GetPlan() map[string]string
     Github() *github.Client
 }
 
@@ -24,25 +31,73 @@ type user struct {
     github *github.Client
 }
 
+func UserExist(id string) bool {
+    var usrdat bson.M
+    query := bson.M { "id": id }
+
+    err := UsersColl.Find(query).One(&usrdat)
+    return err == nil
+}
+
+func NewUser(id string) {
+    now := time.Now()
+    doc := bson.M {
+        "id": id,
+        "repos": []string {},
+        "plan": map[string]string {
+            "name": "normal",
+            "expire": strconv.Itoa(now.Day()) + " " + strconv.Itoa(int(now.Month())) + " " + strconv.Itoa(now.Year()),
+        },
+    }
+    UsersColl.Insert(doc)
+}
+
 func (u user) AddIndexed(repo string) {
     list := append(u.GetIndexed(), repo)
 
     query := bson.M { "id": u.id }
     updt := bson.M { "$set": bson.M { "repos": list } }
 
-    Database.C("users").Update(query, updt)
+    UsersColl.Update(query, updt)
 }
 
 func (u user) GetIndexed() []string {
     var usrdat bson.M
     query := bson.M { "id": u.id }
     list := []string {}
-    if err := Database.C("users").Find(query).One(&usrdat); err == nil {
+    if err := UsersColl.Find(query).One(&usrdat); err == nil {
         for _, s := range usrdat["repos"].([]interface{}) {
             list = append(list, s.(string))
         }
     }
     return list
+}
+
+func (u user) GetPlan() map[string]string {
+    var usrdat bson.M
+    query := bson.M { "id": u.id }
+    UsersColl.Find(query).One(&usrdat)
+
+    storedplan := usrdat["plan"].(bson.M)
+
+    plan := map[string]string {}
+    format := "2 1 2006"
+    expire, e := time.Parse(format, storedplan["expire"].(string))
+    if e != nil && expire.After(time.Now()) {
+        plan["name"] = storedplan["name"].(string)
+        plan["expire"] = storedplan["expire"].(string)
+    } else {
+        plan["name"] = "normal"
+        plan["expire"] = "0"
+
+        UsersColl.Update(query, bson.M {
+            "$set": bson.M {
+                "plans": plan,
+            },
+        })
+    }
+
+    return plan
 }
 
 func (u user) IsLoggedIn() bool {
@@ -80,21 +135,4 @@ func UserInject(session sessions.Session, ctx martini.Context) {
     }
 
     ctx.MapTo(u, (*User) (nil))
-}
-
-func CreateData(user User, session sessions.Session) map[string]interface{} {
-    data := map[string]interface{} {
-        "loggedin": user.IsLoggedIn(),
-        "message": "",
-    }
-    if user.IsLoggedIn() {
-        data["username"] = user.Username()
-    }
-    if session != nil {
-        flashes := session.Flashes("message")
-        if len(flashes) != 0 {
-            data["message"] = flashes[0].(string)
-        }
-    }
-    return data
 }

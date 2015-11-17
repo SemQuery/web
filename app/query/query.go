@@ -3,13 +3,13 @@ package query
 import (
     "github.com/semquery/web/app/common"
 
-    "gopkg.in/mgo.v2/bson"
 
+    "github.com/google/go-github/github"
     "github.com/martini-contrib/render"
     "github.com/martini-contrib/sessions"
     "github.com/gorilla/websocket"
 
-//    "log"
+    "log"
     "math/rand"
 //    "strconv"
     "net/http"
@@ -17,6 +17,7 @@ import (
     "strings"
     "encoding/json"
 //    "io/ioutil"
+    "os/exec"
 
     "errors"
 )
@@ -75,122 +76,225 @@ func handleSearch(user common.User, req *http.Request) (common.CodeSource, error
     }
 }
 
-var ws_transfer = map[int64][]string{}
-
-//Rendering search page with template data
-func QueryPage(user common.User, r render.Render, req *http.Request) {
-    data := struct {
-        Loggedin, Indexed bool
-        Usrname, Query string
-        Ws_id int64
-    } {
-        Loggedin: user.IsLoggedIn(),
-        Usrname: user.Username(),
-    }
-
-    req.ParseForm()
-    /*
-    repoUser := req.FormValue("user")
-    repoName := req.FormValue("name")
-    status := common.RepositoryStatus(&common.Repository{
-        User: repoUser,
-        Name: repoName,
-    })
-    */
-
-    // id := rand.Int63()
-    // data["ws_id"] = id
-    // ws_transfer[id] = []string{req.FormValue("q"), req.FormValue("repo")}
-
-    // path := "_repos/" + req.FormValue("repo")
-
-    // if _, err := os.Stat(path); os.IsNotExist(err) {
-    //     data["indexed"] = false
-    // } else {
-    //     data["indexed"] = true
-    // }
-
-    data.Query = req.FormValue("q")
-
-    r.HTML(200, "query", data)
-}
-
 type Packet struct {
     Action string `json:"action"`
     Payload map[string]interface{} `json:"payload"`
 }
 
-func (p Packet) Send(ws *websocket.Conn) {
-    raw, _ := json.Marshal(p)
-    ws.WriteMessage(1, raw)
+func WarningPacket(message string) Packet {
+    return Packet {
+        Action: "warning",
+        Payload: map[string]interface{} {
+            "message": message,
+        },
+    }
 }
 
-func InitiateIndex(r *http.Request, session sessions.Session) {
+func (p Packet) Json() string {
+    raw, _ := json.Marshal(p)
+    return string(raw)
+}
+
+func (p Packet) Send(ws *websocket.Conn) {
+    ws.WriteMessage(1, []byte(p.Json()))
+}
+
+func InitiateIndex(user common.User, r *http.Request, session sessions.Session) string {
+    if !user.IsLoggedIn() {
+        return WarningPacket("You are not logged in").Json()
+    }
+
     r.ParseForm()
-    params, _ := url.ParseQuery(r.FormValue("search"))
+    if r.FormValue("search") == "" {
+        return WarningPacket("Null information").Json()
+    }
+
+    params, _ := url.ParseQuery(r.FormValue("search")[1:])
+    if params.Get("source") == "github" {
+        return IndexGithub(params, session.Get("token").(string), user)
+    } else if params.Get("source") == "link" {
+        return IndexLink(params)
+    }
+
+    return WarningPacket("Null source option").Json()
+}
+
+func IndexLink(params url.Values) string {
+    if params.Get("link") == "" {
+        return WarningPacket("Null link").Json()
+    }
+
+    url, _ := url.Parse(params.Get("link"))
+
+    repo := &common.LinkSource {
+        URL: url,
+    }
+
+    if common.GetCodeSourceStatus(repo) != common.CodeSourceStatusNotFound {
+        return WarningPacket("This repository is either already indexed or is currently being indexed").Json()
+    }
+
+    out, _ := exec.Command("git", "ls-remote", params.Get("link")).CombinedOutput()
+    log.Println(string(out))
+    if strings.Contains(string(out), "Fatal") {
+        return WarningPacket("Cannot find git repository at this link").Json()
+    }
+
+    common.UpdateStatus(repo, common.CodeSourceStatusWorking)
+
     indexJob := IndexingJob {
-        Token: session.Get("token").(string),
-        RepositoryPath: params.Get("user") + "/" + params.Get("repo"),
+        Type: "link",
+        Link: params.Get("link"),
+
+        Token: "",
+        RepositoryPath: "",
     }
 
     QueueIndexingJob(indexJob)
+    go func() {
+        progress := Packet { "", map[string]interface{} {} }
+        pubsub, _ := common.Rds.Subscribe(indexJob.Link)
+        defer pubsub.Close()
+        for {
+            msg, err := pubsub.ReceiveMessage()
+            if err != nil {
+                continue
+            }
+            progress = Packet {}
+            json.Unmarshal([]byte(msg.Payload), &progress)
+            if progress.Action == "finished" {
+                common.UpdateStatus(repo, common.CodeSourceStatusDone)
+                break
+            }
+        }
+    }()
+    return Packet {
+        Action: "success",
+        Payload: map[string]interface{} {},
+    }.Json()
+}
+
+func IndexGithub(params url.Values, token string, user common.User) string {
+    if params.Get("user") == "" || params.Get("repo") == "" {
+        return WarningPacket("Null repository owner or name").Json()
+    }
+
+    repo := &common.RepositorySource {
+        User: params.Get("user"),
+        Name: params.Get("repo"),
+    }
+
+    if common.GetCodeSourceStatus(repo) != common.CodeSourceStatusNotFound {
+        return WarningPacket("This repository is either already indexed or is currently being indexed").Json()
+    }
+
+    _, _, e := user.Github().Repositories.Get(repo.User, repo.Name)
+
+    if e != nil {
+        return WarningPacket("This repository does not exist").Json()
+    }
+
+    _, _, e = github.NewClient(nil).Repositories.Get(repo.User, repo.Name)
+
+    if e != nil && user.GetPlan()["name"] == "normal" {
+        return WarningPacket("You must be on a paid plan in order to index a private repository").Json()
+    }
+
+    indexJob := IndexingJob {
+        Type: "github",
+        Token: token,
+        RepositoryPath: repo.User + "/" + repo.Name,
+
+        Link: "",
+    }
+
+    common.UpdateStatus(repo, common.CodeSourceStatusWorking)
+    QueueIndexingJob(indexJob)
+
+    go func() {
+        progress := Packet { "", map[string]interface{} {} }
+        pubsub, _ := common.Rds.Subscribe(indexJob.RepositoryPath)
+        defer pubsub.Close()
+        for {
+            msg, err := pubsub.ReceiveMessage()
+            if err != nil {
+                continue
+            }
+            progress = Packet {}
+            json.Unmarshal([]byte(msg.Payload), &progress)
+            if progress.Action == "finished" {
+                common.UpdateStatus(repo, common.CodeSourceStatusDone)
+                break
+            }
+        }
+    }()
+    return Packet {
+        Action: "success",
+        Payload: map[string]interface{} {},
+    }.Json()
+
 }
 
 func SocketPage(user common.User, session sessions.Session, r *http.Request, w http.ResponseWriter) {
+
+    params := r.URL.Query()
+
+    if params.Get("source") == "" {
+        return
+    }
+
+    var name string
+
+    if params.Get("source") == "github" {
+        if params.Get("user") == "" || params.Get("repo") == "" {
+            return
+        }
+        source := &common.RepositorySource {
+            User: params.Get("user"),
+            Name: params.Get("repo"),
+        }
+        name = source.User + "/" + source.Name
+        if common.GetCodeSourceStatus(source) != common.CodeSourceStatusWorking {
+            return
+        }
+    } else if params.Get("source") == "link" {
+        if params.Get("link") == "" {
+            return
+        }
+        url, _ := url.Parse(params.Get("link"))
+        source := &common.LinkSource {
+           URL: url,
+        }
+        name = source.URL.String()
+        if common.GetCodeSourceStatus(source) != common.CodeSourceStatusWorking {
+            return
+        }
+    }
+
+    log.Println("Connected to web socket")
+    log.Println(name)
+
     ws, err := websocket.Upgrade(w, r, nil, 1024, 1024)
     if _, ok := err.(websocket.HandshakeError); (ok || err != nil) {
         return
     }
 
-    params := r.URL.Query()
-    repo := params.Get("user") + "/" + params.Get("repo")
-
-    repo_parts := strings.Split(repo, "/")
-    if len(repo_parts) < 2 {
-        return
-    }
-
     progress := Packet { "", map[string]interface{} {} }
-    pubsub, _ := common.Rds.Subscribe(repo)
+    pubsub, _ := common.Rds.Subscribe(name)
+    defer pubsub.Close()
     for {
         msg, err := pubsub.ReceiveMessage()
         if err != nil {
             continue
         }
+
         progress = Packet {}
         json.Unmarshal([]byte(msg.Payload), &progress)
+        progress.Send(ws)
         if progress.Action == "finished" {
-            find := bson.M { "repository": repo }
-            update := bson.M { "$set": bson.M { "status": "completed" } }
-            common.Database.C("repositories").Update(find, update)
-            user.AddIndexed(repo)
+            user.AddIndexed(name)
             break;
-        } else {
-            progress.Send(ws)
         }
     }
-    pubsub.Close()
-
-    /*
-    letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-    b := make([]rune, 10)
-    for i := range b {
-        b[i] = letters[rand.Intn(len(letters))]
-    }
-
-    common.Rds.Set(query + "|" + repo, string(b), 0)
-
-    form := url.Values {}
-    form.Add("token", string(b))
-    form.Add("repo", repo)
-    form.Add("query", query)
-
-    client := &http.Client{}
-    resp, _ := client.PostForm("http://localhost:3001/", form)
-
-    body, _ := ioutil.ReadAll(resp.Body)
-
-    ws.WriteMessage(1, body) */
     ws.Close()
 }

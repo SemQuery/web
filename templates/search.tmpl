@@ -7,17 +7,15 @@
 
 {{ if eq .SourceStatus "none" }}
 <div class="ui raised segment">
-    There doesn&rsquo;t appear to be anything here.
-                         <div id="progress-bar" class="ui active progress">
-                            <div id="bar" class="bar" style="width: 0%;">
-                                <div id="progress-label" class="progress">0%</div>
-                            </div>
-                            <div class="label">Progress</div>
-                        </div>
-   {{ if .IsLoggedIn }}
-        <form id="indexaction" action="/index_source" method="post">
-            <input type="submit" class="ui huge green basic button" value="Index Source"></input>
-        </form>
+    <div id="message">There doesn&rsquo;t appear to be anything here.</div>
+    <div id="progress-bar" class="ui active progress">
+        <div id="bar" class="bar" style="width: 0%;">
+            <div id="progress-label" class="progress">0%</div>
+        </div>
+        <div class="label">Progress</div>
+    </div>
+    {{ if .IsLoggedIn }}
+        <button id="index-source-button" class="ui huge green basic button">Index Source</button>
     {{ else }}
         <a href="/login?redirect_back=true" class="ui huge blue basic button">
             Sign in to index source

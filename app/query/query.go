@@ -105,6 +105,10 @@ func InitiateIndex(user common.User, r *http.Request, session sessions.Session) 
     }
 
     r.ParseForm()
+    if r.FormValue("search") == "" {
+        return WarningPacket("Null information").Json()
+    }
+
     params, _ := url.ParseQuery(r.FormValue("search")[1:])
     if params.Get("source") == "github" {
         return IndexGithub(params, session.Get("token").(string), user)

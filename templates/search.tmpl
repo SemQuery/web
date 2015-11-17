@@ -15,9 +15,7 @@
         <div class="label">Progress</div>
     </div>
     {{ if .IsLoggedIn }}
-        <form id="indexaction" action="/index_source" method="post">
-            <input type="submit" class="ui huge green basic button" value="Index Source"></input>
-        </form>
+        <button id="index-source-button" class="ui huge green basic button">Index Source</button>
     {{ else }}
         <a href="/login?redirect_back=true" class="ui huge blue basic button">
             Sign in to index source

@@ -1,4 +1,4 @@
-$("#indexaction").submit(function(e) {
+$("#index-source-button").click(function(e) {
     e.preventDefault();
 
     $.post("index_source", {

@@ -160,6 +160,7 @@ func IndexLink(params url.Values) string {
             json.Unmarshal([]byte(msg.Payload), &progress)
             if progress.Action == "finished" {
                 common.UpdateStatus(repo, common.CodeSourceStatusDone)
+                break
             }
         }
     }()
@@ -219,6 +220,7 @@ func IndexGithub(params url.Values, token string, user common.User) string {
             json.Unmarshal([]byte(msg.Payload), &progress)
             if progress.Action == "finished" {
                 common.UpdateStatus(repo, common.CodeSourceStatusDone)
+                break
             }
         }
     }()

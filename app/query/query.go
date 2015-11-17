@@ -81,6 +81,15 @@ type Packet struct {
     Payload map[string]interface{} `json:"payload"`
 }
 
+func WarningPacket(message string) Packet {
+    return Packet {
+        Action: "warning",
+        Payload: map[string]interface{} {
+            "message": message,
+        },
+    }
+}
+
 func (p Packet) Json() string {
     raw, _ := json.Marshal(p)
     return string(raw)
@@ -92,12 +101,7 @@ func (p Packet) Send(ws *websocket.Conn) {
 
 func InitiateIndex(user common.User, r *http.Request, session sessions.Session) string {
     if !user.IsLoggedIn() {
-        return Packet {
-            Action: "warning",
-            Payload: map[string]interface{} {
-                "message": "You are not logged in",
-            },
-        }.Json()
+        return WarningPacket("You are not logged in").Json()
     }
 
     r.ParseForm()
@@ -108,22 +112,12 @@ func InitiateIndex(user common.User, r *http.Request, session sessions.Session) 
         return IndexLink(params)
     }
 
-    return Packet {
-        Action: "warning",
-        Payload: map[string]interface{} {
-            "message": "Null source option",
-        },
-    }.Json()
+    return WarningPacket("Null source option").Json()
 }
 
 func IndexLink(params url.Values) string {
     if params.Get("link") == "" {
-        return Packet {
-            Action: "warning",
-            Payload: map[string]interface{} {
-                "message": "Null link",
-            },
-        }.Json()
+        return WarningPacket("Null link").Json()
     }
 
     url, _ := url.Parse(params.Get("link"))
@@ -133,23 +127,13 @@ func IndexLink(params url.Values) string {
     }
 
     if common.GetCodeSourceStatus(repo) != common.CodeSourceStatusNotFound {
-        return Packet {
-            Action: "warning",
-            Payload: map[string]interface{} {
-                "message": "This repository is either already indexed or is currently being indexed",
-            },
-        }.Json()
+        return WarningPacket("This repository is either already indexed or is currently being indexed").Json()
     }
 
     out, _ := exec.Command("git", "ls-remote", params.Get("link")).CombinedOutput()
     log.Println(string(out))
     if strings.Contains(string(out), "Fatal") {
-        return Packet {
-            Action: "warning",
-            Payload: map[string]interface{} {
-                "message": "Cannot find git repository at this link",
-            },
-        }.Json()
+        return WarningPacket("Cannot find git repository at this link").Json()
     }
 
     common.UpdateStatus(repo, common.CodeSourceStatusWorking)
@@ -187,12 +171,7 @@ func IndexLink(params url.Values) string {
 
 func IndexGithub(params url.Values, token string, user common.User) string {
     if params.Get("user") == "" || params.Get("repo") == "" {
-        return Packet {
-            Action: "warning",
-            Payload: map[string]interface{} {
-                "message": "Null repository owner or name",
-            },
-        }.Json()
+        return WarningPacket("Null repository owner or name").Json()
     }
 
     repo := &common.RepositorySource {
@@ -201,34 +180,19 @@ func IndexGithub(params url.Values, token string, user common.User) string {
     }
 
     if common.GetCodeSourceStatus(repo) != common.CodeSourceStatusNotFound {
-        return Packet {
-            Action: "warning",
-            Payload: map[string]interface{} {
-                "message": "This repository is either already indexed or is currently being indexed",
-            },
-        }.Json()
+        return WarningPacket("This repository is either already indexed or is currently being indexed").Json()
     }
 
     _, _, e := user.Github().Repositories.Get(repo.User, repo.Name)
 
     if e != nil {
-        return Packet {
-            Action: "warning",
-            Payload: map[string]interface{} {
-                "message": "This repository does not exist",
-            },
-        }.Json()
+        return WarningPacket("This repository does not exist").Json()
     }
 
     _, _, e = github.NewClient(nil).Repositories.Get(repo.User, repo.Name)
 
     if e != nil && user.GetPlan()["name"] == "normal" {
-        return Packet {
-            Action: "warning",
-            Payload: map[string]interface{} {
-                "message": "You must be on a paid plan in order to index a private repository",
-            },
-        }.Json()
+        return WarningPacket("You must be on a paid plan in order to index a private repository").Json()
     }
 
     indexJob := IndexingJob {

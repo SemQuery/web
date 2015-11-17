@@ -10,7 +10,7 @@ $("#indexaction").submit(function(e) {
             $("#message").text(callback.payload.message);
             break;
         case "success":
-            var url = 'ws://localhost:3000/socket?' + location.search;
+            var url = 'ws://localhost:3000/socket' + location.search;
             var socket = new WebSocket(url);
 
             socket.onmessage = function(event) {

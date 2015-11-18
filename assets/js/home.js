@@ -52,7 +52,11 @@ var App = App || {pages: {}};
     }
 
     App.Home.learnMore = learnMore;
-    bind(App.Home, '#learn-more', 'click', learnMore);
+    bind(App.Home, {
+        selector: '#learn-more',
+        action: 'click',
+        callback: learnMore
+    });
 
     var Sources = {
         GITHUB: "github-source-input",
@@ -85,8 +89,16 @@ var App = App || {pages: {}};
         selectSource(Sources.LINK);
     }
 
-    bind(App.Home, '#source-picker-github', 'click', selectGithubSource);
-    bind(App.Home, '#source-picker-link', 'click', selectLinkSource);
+    bind(App.Home, {
+        selector: '#source-picker-github',
+        action: 'click',
+        callback: selectGithubSource
+    });
+    bind(App.Home, {
+        selector: '#source-picker-link',
+        action: 'click',
+        callback: selectLinkSource
+    });
 
     function disableHiddenInputs() {
         $("#" + currentSourceSelection + " input").removeAttr('disabled');
@@ -97,5 +109,9 @@ var App = App || {pages: {}};
             }
         });
     }
-    bind(App.Home, 'form#source-form', 'submit', disableHiddenInputs);
+    bind(App.Home, {
+        selector: 'form#source-form',
+        action: 'submit',
+        callback: disableHiddenInputs
+    });
 })();

@@ -1,8 +1,10 @@
 var App = App || {pages: {}};
 
 $(document).ready(function() {
-    var CURRENT_PAGE = "home";
-    var namespace    = App.pages[CURRENT_PAGE];
+    if (CURRENT_PAGE === undefined)
+        return;
+
+    var namespace = App.pages[CURRENT_PAGE];
 
     var hooks = namespace.hooks;
     var binds = namespace.binds;
@@ -13,12 +15,12 @@ $(document).ready(function() {
     }
     if (binds) {
         for (var i = 0; i < binds.length; i++) {
-            var arr = binds[i];
-            $(arr[0]).on(arr[1], arr[2]);
+            var obj = binds[i];
+            $(obj.selector).on(obj.action, obj.callback);
         }
     }
 });
 
-function bind(namespace, selector, action, callback) {
-    namespace.binds.push([selector, action, callback]);
+function bind(namespace, obj) {
+    namespace.binds.push(obj);
 }

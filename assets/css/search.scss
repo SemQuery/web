@@ -1,0 +1,92 @@
+#search-container {
+    margin-top: 30px;
+}
+
+#menu-search {
+    background-color: #0b0b5a;
+    margin-bottom: 0;
+    border-bottom: 1px solid rgb(50, 50, 50);
+}
+
+.search-title {
+    font-weight: 100;
+    font-size: 2.5em;
+}
+
+.search-title > span.monospace {
+    font-weight: normal;
+}
+
+#search-message {
+    font-weight: 500;
+}
+
+.repo-info-container {
+    float: right;
+}
+
+.repo-info {
+    margin-left: 20px;
+    display: inline-block;
+}
+
+#progress-bar-container {
+    margin: 0 80px;
+}
+
+.indexing-phase {
+    min-height: 40px;
+    width: 100%;
+    position: relative;
+}
+
+.indexing-phase.done {
+    background-color: rgba(100, 234, 19, 0.2);
+    border-radius: 5px;
+    color: gray !important;
+}
+
+div.indexing-phase .phase-indicator {
+    background-color: #2185d0 !important;
+}
+div.indexing-phase.done .phase-indicator {
+    background-color: #21ba45 !important;
+}
+
+.indexing-phase .phase-indicator .icon {
+    display: none;
+}
+.indexing-phase.done .phase-indicator .icon {
+    display: inline-block;
+}
+.indexing-phase.done .phase-indicator span {
+    display: none;
+}
+
+.unstarted {
+    display: none;
+}
+
+.indexing-phase .icon {
+    margin: 0 !important;
+}
+
+.indexing-phase h1 {
+    margin: 0 !important;
+    padding-top: 3px;
+    font-size: 1.7em;
+    font-weight: normal;
+}
+
+.phase-indicator {
+    vertical-align: middle !important;
+    margin-right: 20px !important;
+    position: absolute;
+    left: 15px;
+    top: 8px;
+    color: white !important;
+}
+
+.phase-indicator:not(:first-child) {
+    margin-top: 12px !important;
+}

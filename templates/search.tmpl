@@ -1,25 +1,98 @@
-<div class="ui inverted black vertical segment">
-    <h1>
-        Status:
-        {{ .SourceStatus }}
-    </h1>
-</div>
-
-{{ if eq .SourceStatus "none" }}
-<div class="ui raised segment">
-    <div id="message">There doesn&rsquo;t appear to be anything here.</div>
-    <div id="progress-bar" class="ui active progress">
-        <div id="bar" class="bar" style="width: 0%;">
-            <div id="progress-label" class="progress">0%</div>
+<div id="search-container" class="ui container">
+    <div>
+        <span class="search-title">
+            <i class="github icon"></i>
+            {{ .SourceUser }}
+            <span class="sep">/</span>
+            {{ .SourceRepo }}
+        </span>
+        <div class="repo-info-container">
+            <div class="repo-info">
+                <div>
+                    <b>LAST INDEXED</b>
+                </div>
+                Two hours ago
+            </div>
+            <div class="repo-info">
+                <div>
+                    <b>GIT INFO</b>
+                </div>
+                3 branches
+                <span class="ui floated left monospace">
+                    2e8fd1
+                </span>
+            </div>
+            <div class="repo-info">
+                <div>
+                    <b>STATS</b>
+                </div>
+                24,391 searches    
+            </div>
         </div>
-        <div class="label">Progress</div>
     </div>
-    {{ if .IsLoggedIn }}
-        <button id="index-source-button" class="ui huge green basic button">Index Source</button>
-    {{ else }}
-        <a href="/login?redirect_back=true" class="ui huge blue basic button">
-            Sign in to index source
-        </a>
+
+    <div class="ui divider"></div>
+
+    {{ if eq .SourceStatus "none" }}
+    <div class="ui raised segment" align="center" id="message-segment">
+        <h1 id="search-message">
+            This repository hasn&rsquo;t been indexed yet.</h1>
+        {{ if .IsLoggedIn }}
+            <button id="index-source-button" class="ui huge green basic button">
+                <span>Index Source</span>
+                <div class="ui mini inline loader"></div>
+            </button>
+        {{ else }}
+            <a href="/login?redirect_back=true" class="ui huge blue basic button">
+                Sign in to index source
+            </a>
+        {{ end }}
+    </div>
     {{ end }}
+    <div class="unstarted ui raised segment" id="progress-segment">
+        <div align="center">
+            <div class="indexing-phase indexing-phase-queued">
+                <span class="phase-indicator ui circular label">
+                    <span>1</span>
+                    <i class="check icon"></i>
+                </span>
+                <h1>
+                    Queued for indexing...
+                </h1>
+            </div>
+            <div class="unstarted indexing-phase indexing-phase-cloning">
+                <div class="ui divider"></div>
+                <span class="phase-indicator ui circular label">
+                    <span>2</span>
+                    <i class="check icon"></i>
+                </span>
+                <h1>
+                    Cloning repository...
+                </h1>
+            </div>
+            <div class="unstarted indexing-phase indexing-phase-indexing">
+                <div class="ui divider"></div>
+                <span class="phase-indicator ui circular label">
+                    <span>3</span>
+                    <i class="check icon"></i>
+                </span>
+                <h1>
+                    Indexed
+                    <span id="progress-lines-counter" class="monospace">0</span>
+                    lines in
+                    <span id="progress-files-counter" class="monospace">0</span>
+                    files
+                    (<span id="progress-percent-counter" class="monospace">0%</span>)
+                </h1>
+                <div id="progress-bar-container">
+                    <div id="progress-bar" class="ui small blue progress">
+                        <div id="bar" class="bar" style="width: 0%;">
+                            <div id="progress-label" class="progress">0%</div>
+                        </div>
+                        <div class="label">Progress</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-{{ end }}

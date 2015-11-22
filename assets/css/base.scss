@@ -5,6 +5,10 @@ body, input, .ui, h1, h2, h3, h4, h5 {
     font-family: $font-stack !important;
 }
 
+.monospace {
+    font-family: $code-font-stack;
+}
+
 .ui.menu-transparent {
     background-color: rgba(0, 0, 0, 0.12) !important;
 }
@@ -101,7 +105,6 @@ code {
 .navigation {
     position: relative;
     z-index: 2;
-    background-color: white !important;
     margin-top: 0 !important;
 }
 
@@ -158,3 +161,17 @@ code {
     color: #333;
 }
 
+.number-circle {
+    display: block;
+    height: 30px;
+    width: 30px;
+    line-height: 30px;
+
+    -moz-border-radius: 15px;
+    border-radius: 15px;
+    border: black solid 1px;
+
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.5em;
+}

@@ -10,22 +10,27 @@ import (
     "encoding/json"
 )
 
+type IndexingJobType string
+const (
+    GitHubIndexingJob = "github"
+    GitURLIndexingJob = "url"
+)
+
 type IndexingJob struct {
-    Type string
+    Type IndexingJobType
 
-    Token string
-    RepositoryPath string
-
-    Link string
+    Token string // GitHub token
+    URL string   // Git URL
+    ID string    // MongoDB ID of source
 }
 
-func (job IndexingJob) toJson() string {
+func (job *IndexingJob) toJson() string {
     encode, _ := json.Marshal(job)
     return string(encode)
 }
 
 // returns: whether queueing the job was successful
-func QueueIndexingJob(job IndexingJob) bool {
+func QueueIndexingJob(job *IndexingJob) bool {
     input := sqs.SendMessageInput{
         MessageBody: aws.String(job.toJson()),
         QueueUrl: &common.QueueURL,

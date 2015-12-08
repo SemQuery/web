@@ -4,26 +4,32 @@ import (
     "github.com/semquery/web/app/common"
 
 
-    "github.com/google/go-github/github"
+    // "github.com/google/go-github/github"
     "github.com/martini-contrib/render"
     "github.com/martini-contrib/sessions"
     "github.com/gorilla/websocket"
 
-    "log"
     "math/rand"
-//    "strconv"
     "net/http"
     "net/url"
-    "strings"
+    // "strings"
     "encoding/json"
-//    "io/ioutil"
     "os/exec"
+    "time"
+    "log"
 
     "errors"
 )
 
+type wsConn struct {
+    subscribed bool
+    conn *websocket.Conn
+}
+
+var wsMap map[string][]wsConn = map[string][]wsConn {}
+
 func SearchPage(user common.User, session sessions.Session, r render.Render, req *http.Request) {
-    src, err := handleSearch(user, req)
+    src, err := handleSearch(req.URL.Query())
 
     if err != nil {
         r.Error(400)
@@ -31,18 +37,21 @@ func SearchPage(user common.User, session sessions.Session, r render.Render, req
 
     status := common.GetCodeSourceStatus(src)
 
-    id := rand.Int63()
+    id     := rand.Int63()
     params := req.URL.Query()
-    usr := params.Get("user")
-    repo := params.Get("repo")
+    usr    := params.Get("user")
+    repo   := params.Get("repo")
     session.Set(id, usr + "/" + repo)
 
     data := struct {
         common.User
         Pagename     string
+        Theme        string
         SourceStatus string
         WS_ID int64
-    } {user, "search", string(status), id}
+
+        Source *common.CodeSource
+    } {user, "search", "standard", string(status), id, src}
 
     r.HTML(200, "search", data)
 }
@@ -50,18 +59,14 @@ func SearchPage(user common.User, session sessions.Session, r render.Render, req
 // Creates a CodeSource from the URL query string,
 // returning (source, nil) successful or (nil, error)
 // if a code source could not be created
-func handleSearch(user common.User, req *http.Request) (common.CodeSource, error) {
-    params := req.URL.Query()
+func handleSearch(params url.Values) (*common.CodeSource, error) {
     source := params.Get("source")
 
     switch source {
     case common.CodeSourceGitHub:
         user := params.Get("user")
         repo := params.Get("repo")
-        if user == "" || repo == "" {
-            return nil, errors.New("User or repository blank")
-        }
-        return &common.RepositorySource{user, repo}, nil
+        return common.CreateGitHubSource(user, repo), nil
 
     case common.CodeSourceLink:
         link     := params.Get("link")
@@ -69,7 +74,7 @@ func handleSearch(user common.User, req *http.Request) (common.CodeSource, error
         if err != nil {
             return nil, errors.New("Invalid link")
         }
-        return &common.LinkSource{url}, nil
+        return common.CreateGitSource(url), nil
 
     default:
         return nil, errors.New("Invalid source")
@@ -99,142 +104,166 @@ func (p Packet) Send(ws *websocket.Conn) {
     ws.WriteMessage(1, []byte(p.Json()))
 }
 
-func InitiateIndex(user common.User, r *http.Request, session sessions.Session) string {
+func InitiateIndex(user common.User, r *http.Request,
+    session sessions.Session) (string, int) {
+
     if !user.IsLoggedIn() {
-        return WarningPacket("You are not logged in").Json()
+        return WarningPacket("You are not logged in").Json(),
+            http.StatusForbidden
     }
 
     r.ParseForm()
     if r.FormValue("search") == "" {
-        return WarningPacket("Null information").Json()
+        return WarningPacket("Null information").Json(),
+            http.StatusBadRequest
     }
 
-    params, _ := url.ParseQuery(r.FormValue("search")[1:])
-    if params.Get("source") == "github" {
-        return IndexGithub(params, session.Get("token").(string), user)
-    } else if params.Get("source") == "link" {
-        return IndexLink(params)
+    params, err := url.ParseQuery(r.FormValue("search")[1:])
+    if err != nil {
+        return WarningPacket("Invalid search").Json(),
+            http.StatusBadRequest
+    }
+    src, err := handleSearch(params)
+    if err != nil {
+        return WarningPacket("Invalid search").Json(),
+            http.StatusBadRequest
     }
 
-    return WarningPacket("Null source option").Json()
+    if src.Git != nil {
+        return IndexGit(src, session)
+    }
+
+    return WarningPacket("No source found").Json(),
+        http.StatusBadRequest
 }
 
-func IndexLink(params url.Values) string {
-    if params.Get("link") == "" {
-        return WarningPacket("Null link").Json()
+func IndexGit(src *common.CodeSource, s sessions.Session) (string, int) {
+    git := src.Git
+
+    err := validateGitURL(git.URL.String())
+    if err != nil {
+        return WarningPacket(err.Error()).Json(),
+            http.StatusNotFound
     }
 
-    url, _ := url.Parse(params.Get("link"))
-
-    repo := &common.LinkSource {
-        URL: url,
+    id  := common.UpdateStatus(src, common.CodeSourceStatusWorking)
+    if id == nil {
+        return WarningPacket("Internal error").Json(),
+            http.StatusInternalServerError
     }
 
-    if common.GetCodeSourceStatus(repo) != common.CodeSourceStatusNotFound {
-        return WarningPacket("This repository is either already indexed or is currently being indexed").Json()
+    job := &IndexingJob{
+        URL: git.URL.String(),
+        ID: id.Hex(),
+        Type: GitURLIndexingJob,
+    }
+    if git.IsGitHub() {
+        job.Type  = GitHubIndexingJob
+        job.Token = s.Get("token").(string)
     }
 
-    out, _ := exec.Command("git", "ls-remote", params.Get("link")).CombinedOutput()
-    log.Println(string(out))
-    if strings.Contains(string(out), "Fatal") {
-        return WarningPacket("Cannot find git repository at this link").Json()
+    if !QueueIndexingJob(job) {
+        return WarningPacket("Unable to queue").Json(),
+            http.StatusInternalServerError
     }
 
-    common.UpdateStatus(repo, common.CodeSourceStatusWorking)
+    go redisPubSub(id.Hex())
 
-    indexJob := IndexingJob {
-        Type: "link",
-        Link: params.Get("link"),
-
-        Token: "",
-        RepositoryPath: "",
+    res := Packet{
+        Action: "queued",
+        Payload: map[string]interface{} {
+            "id": id.Hex(),
+        },
     }
+    return res.Json(), http.StatusOK
+}
 
-    QueueIndexingJob(indexJob)
-    go func() {
-        progress := Packet { "", map[string]interface{} {} }
-        pubsub, _ := common.Rds.Subscribe(indexJob.Link)
-        defer pubsub.Close()
-        for {
-            msg, err := pubsub.ReceiveMessage()
-            if err != nil {
-                continue
-            }
-            progress = Packet {}
-            json.Unmarshal([]byte(msg.Payload), &progress)
-            if progress.Action == "finished" {
-                common.UpdateStatus(repo, common.CodeSourceStatusDone)
-                break
+func redisPubSub(id string) {
+    pubsub, _ := common.Rds.Subscribe("indexing:" + id)
+    time.Sleep(time.Second)
+    defer pubsub.Close()
+    for {
+        msg, err := pubsub.ReceiveMessage()
+        if err != nil {
+            continue
+        }
+
+        data := Packet {}
+        err  = json.Unmarshal([]byte(msg.Payload), &data)
+        log.Print("Got message. Ok? ", err == nil)
+        if err == nil {
+            if clients, ok := wsMap[id]; ok {
+                for _, c := range clients {
+                    data.Send(c.conn)
+                }
             }
         }
-    }()
-    return Packet {
-        Action: "success",
-        Payload: map[string]interface{} {},
-    }.Json()
+    }
 }
 
-func IndexGithub(params url.Values, token string, user common.User) string {
-    if params.Get("user") == "" || params.Get("repo") == "" {
-        return WarningPacket("Null repository owner or name").Json()
-    }
-
-    repo := &common.RepositorySource {
-        User: params.Get("user"),
-        Name: params.Get("repo"),
-    }
-
-    if common.GetCodeSourceStatus(repo) != common.CodeSourceStatusNotFound {
-        return WarningPacket("This repository is either already indexed or is currently being indexed").Json()
-    }
-
-    _, _, e := user.Github().Repositories.Get(repo.User, repo.Name)
-
-    if e != nil {
-        return WarningPacket("This repository does not exist").Json()
-    }
-
-    _, _, e = github.NewClient(nil).Repositories.Get(repo.User, repo.Name)
-
-    if e != nil && user.GetPlan()["name"] == "normal" {
-        return WarningPacket("You must be on a paid plan in order to index a private repository").Json()
-    }
-
-    indexJob := IndexingJob {
-        Type: "github",
-        Token: token,
-        RepositoryPath: repo.User + "/" + repo.Name,
-
-        Link: "",
-    }
-
-    common.UpdateStatus(repo, common.CodeSourceStatusWorking)
-    QueueIndexingJob(indexJob)
-
-    go func() {
-        progress := Packet { "", map[string]interface{} {} }
-        pubsub, _ := common.Rds.Subscribe(indexJob.RepositoryPath)
-        defer pubsub.Close()
-        for {
-            msg, err := pubsub.ReceiveMessage()
+// Validates a git URL
+// returns:
+//   * nil if valid
+//   * error if not valid or if command execution
+//     exceeds 10 seconds.
+func validateGitURL(url string) error {
+    cmd := exec.Command("git", "ls-remote", url)
+    cmd.Start()
+    done := make(chan error, 1)
+    go func () {
+        done <- cmd.Wait()
+    }()
+    select {
+        case <-time.After(10 * time.Second):
+            cmd.Process.Kill()
+            <-done
+            return errors.New("Git took too long")
+        case err := <-done:
             if err != nil {
-                continue
+                if !cmd.ProcessState.Success() {
+                    return errors.New("Invalid Git URL")
+                }
+                return errors.New("Git command failed")
             }
-            progress = Packet {}
-            json.Unmarshal([]byte(msg.Payload), &progress)
-            if progress.Action == "finished" {
-                common.UpdateStatus(repo, common.CodeSourceStatusDone)
-                break
-            }
-        }
-    }()
-    return Packet {
-        Action: "success",
-        Payload: map[string]interface{} {},
-    }.Json()
-
+            return nil
+    }
 }
 
+func SocketPage(r *http.Request, w http.ResponseWriter) {
+    ws, err := websocket.Upgrade(w, r, nil, 1024, 1024)
+    if err != nil {
+        return
+    }
+
+    subscribeMsg := map[string]interface{} {}
+    err = ws.ReadJSON(&subscribeMsg)
+
+    if err != nil {
+        ws.Close()
+        return
+    }
+
+    id, ok := subscribeMsg["id"]
+    if ok {
+        if val, ok := id.(string); ok {
+            addClient(val, ws)
+            return
+        }
+    }
+    ws.Close()
+}
+
+func addClient(id string, ws *websocket.Conn) {
+    if arr, ok := wsMap[id]; ok {
+        wsMap[id] = append(arr, wsConn{true, ws})
+    } else {
+        wsMap[id] = []wsConn{
+            wsConn{true, ws},
+        }
+    }
+}
+
+/*
 func SocketPage(user common.User, session sessions.Session, r *http.Request, w http.ResponseWriter) {
 
     params := r.URL.Query()
@@ -298,3 +327,4 @@ func SocketPage(user common.User, session sessions.Session, r *http.Request, w h
     }
     ws.Close()
 }
+*/

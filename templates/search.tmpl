@@ -1,10 +1,17 @@
 <div id="search-container" class="ui container">
     <div>
         <span class="search-title">
-            <i class="github icon"></i>
-            {{ .SourceUser }}
-            <span class="sep">/</span>
-            {{ .SourceRepo }}
+            {{ if .Source.Git }}
+                {{ if .Source.Git.IsGitHub }}
+                    <i class="github icon"></i>
+                    {{ .Source.Git.GitHubUser }}
+                    <span class="sep">/</span>
+                    {{ .Source.Git.GitHubRepo }}
+                {{ else }}
+                    <i class="git icon"></i>
+                    {{ .Source.Git.URL.String }}
+                {{ end }} 
+            {{ end }}
         </span>
         <div class="repo-info-container">
             <div class="repo-info">
@@ -51,45 +58,50 @@
     {{ end }}
     <div class="unstarted ui raised segment" id="progress-segment">
         <div align="center">
-            <div class="indexing-phase indexing-phase-queued">
-                <span class="phase-indicator ui circular label">
-                    <span>1</span>
-                    <i class="check icon"></i>
-                </span>
-                <h1>
-                    Queued for indexing...
-                </h1>
+            <div id="indexing-phase-queued">
+                <div class="indexing-phase">
+                    <span class="phase-indicator ui circular label">
+                        <span>1</span>
+                        <i class="check icon"></i>
+                    </span>
+                    <h1>
+                        Queued for indexing...
+                    </h1>
+                </div>
             </div>
-            <div class="unstarted indexing-phase indexing-phase-cloning">
+            <div id="indexing-phase-cloning" class="unstarted">
                 <div class="ui divider"></div>
-                <span class="phase-indicator ui circular label">
-                    <span>2</span>
-                    <i class="check icon"></i>
-                </span>
-                <h1>
-                    Cloning repository...
-                </h1>
+                <div class="indexing-phase">
+                    <span class="phase-indicator ui circular label">
+                        <span>2</span>
+                        <i class="check icon"></i>
+                    </span>
+                    <h1>
+                        Cloning repository...
+                    </h1>
+                </div>
             </div>
-            <div class="unstarted indexing-phase indexing-phase-indexing">
+            <div id="indexing-phase-indexing" class="unstarted">
                 <div class="ui divider"></div>
-                <span class="phase-indicator ui circular label">
-                    <span>3</span>
-                    <i class="check icon"></i>
-                </span>
-                <h1>
-                    Indexed
-                    <span id="progress-lines-counter" class="monospace">0</span>
-                    lines in
-                    <span id="progress-files-counter" class="monospace">0</span>
-                    files
-                    (<span id="progress-percent-counter" class="monospace">0%</span>)
-                </h1>
-                <div id="progress-bar-container">
-                    <div id="progress-bar" class="ui small blue progress">
-                        <div id="bar" class="bar" style="width: 0%;">
-                            <div id="progress-label" class="progress">0%</div>
+                <div class="indexing-phase">
+                    <span class="phase-indicator ui circular label">
+                        <span>3</span>
+                        <i class="check icon"></i>
+                    </span>
+                    <h1>
+                        Indexed
+                        <span id="progress-lines-counter" class="monospace">0</span>
+                        lines in
+                        <span id="progress-files-counter" class="monospace">0</span>
+                        files
+                        (<span id="progress-percent-counter" class="monospace">0%</span>)
+                    </h1>
+                    <div id="progress-bar-container">
+                        <div id="progress-bar" class="ui small blue progress" style="margin: 0">
+                            <div id="bar" class="bar" style="width: 0%;">
+                                <div id="progress-label" class="progress">0%</div>
+                            </div>
                         </div>
-                        <div class="label">Progress</div>
                     </div>
                 </div>
             </div>

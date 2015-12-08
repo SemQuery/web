@@ -17,11 +17,11 @@ var App = App || {pages: {}};
             break;
         case "cloning":
             if (update.payload.status == "started") {
-                $('.indexing-phase-queued').addClass('done');
-                $('.indexing-phase-cloning').slideToggle();
+                $('#indexing-phase-queued .indexing-phase').addClass('done');
+                $('#indexing-phase-cloning').slideToggle();
             } else if (update.payload.status == "finished") {
-                $('.indexing-phase-cloning').addClass('done');
-                $('.indexing-phase-indexing').slideToggle();
+                $('#indexing-phase-cloning .indexing-phase').addClass('done');
+                $('#indexing-phase-indexing').slideToggle();
             }
         }
     }
@@ -47,19 +47,32 @@ var App = App || {pages: {}};
         // TODO make URL configurable
         var WS_URL = "ws://localhost:3000/socket" + location.search;
 
-        $('#index-source-button .loader').addClass('active');
+        var indexBtn = $('#index-source-button');
+        indexBtn.addClass('disabled');
+        indexBtn.children('span').text('Indexing Source');
+        indexBtn.children('.loader').addClass('active');
 
         $.post(INDEX_SOURCE_PATH, {
             search: location.search
         }).done(function(data) {
             var res = JSON.parse(data);
+            console.log("Got result:");
+            console.log(res);
+
             switch (res.action) {
             case "warning":
                 $("#message").text(res.payload.message);
                 break;
-            case "success":
+            case "queued":
+                var id     = res.payload.id;
                 var socket = new WebSocket(WS_URL);
+
                 socket.onmessage = handleSocketUpdate;
+                socket.onopen    = function() {
+                    var connectMsg = JSON.stringify({id: id})
+                    socket.send(connectMsg)
+                };
+
                 $('#progress-segment').slideToggle();
                 break;
             }

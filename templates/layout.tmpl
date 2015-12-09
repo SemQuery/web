@@ -13,7 +13,12 @@
         {{ end }}
         <div id="menu-{{ .Theme }}"  class="ui secondary pointing menu navigation inverted">
             <div class="ui container">
-                <a href="/"><img src="/images/logo_v2_white.svg" class="logo ui image"></img></a>
+                <a href="/" style="margin-right: 10px">
+                    <img src="/images/logo_v2_white.svg" class="logo ui image"></img>
+                </a>
+                <a class="item" href="/docs">
+                    Documentation
+                </a>
                 <div class="right menu">
                     {{ if .IsLoggedIn }} 
                         <a class="active item account" href="">{{ .Username }}</a>

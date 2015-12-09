@@ -7,6 +7,7 @@ import (
     "github.com/semquery/web/app/query"
     "github.com/semquery/web/app/user"
     "github.com/semquery/web/app/cextension"
+    "github.com/semquery/web/app/docs"
 )
 
 func RegisterRoutes(m *martini.ClassicMartini) {
@@ -25,4 +26,6 @@ func RegisterRoutes(m *martini.ClassicMartini) {
     m.Get("/githubcallback", user.GithubCallback)
 
     m.Get("/cextension", cextension.ExtensionPage)
+
+    m.Get("/docs", docs.DocsPage)
 }

@@ -18,6 +18,7 @@ import (
     "github.com/aws/aws-sdk-go/aws"
     "github.com/aws/aws-sdk-go/aws/session"
     "github.com/aws/aws-sdk-go/service/sqs"
+    "github.com/aws/aws-sdk-go/service/s3"
 )
 
 func initDB() {
@@ -58,6 +59,12 @@ func initQueue() {
     common.QueueURL = *output.QueueUrl
 }
 
+func initS3() {
+    common.S3SourceCode = s3.New(session.New(), &aws.Config{
+        Region: &common.Config.S3SourceCodeRegion,
+    })
+}
+
 func main() {
     cfg, err := os.Open("config.json")
     if err != nil {
@@ -70,6 +77,7 @@ func main() {
 
     initDB()
     initQueue()
+    initS3()
 
     m := martini.Classic()
     m.Use(sessions.Sessions("semquery", sessions.NewCookieStore([]byte("secret"))))

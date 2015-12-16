@@ -4,6 +4,7 @@ import (
     "gopkg.in/redis.v3"
 
     "github.com/aws/aws-sdk-go/service/sqs"
+    "github.com/aws/aws-sdk-go/service/s3"
 )
 
 type config struct {
@@ -25,6 +26,11 @@ type config struct {
 
     QueueName   string `json:"sqs_name"`
     QueueRegion string `json:"sqs_region"`
+
+    QueryAddr string `json:"query_addr"`
+
+    S3SourceCodeBucket string `json:"s3_source_code_bucket"`
+    S3SourceCodeRegion string `json:"s3_source_code_region"`
 }
 
 var Config *config = &config{}
@@ -33,3 +39,5 @@ var Rds *redis.Client
 
 var Queue *sqs.SQS
 var QueueURL string
+
+var S3SourceCode *s3.S3

@@ -9,14 +9,14 @@ import (
     "github.com/martini-contrib/sessions"
     "github.com/gorilla/websocket"
 
+    "gopkg.in/mgo.v2/bson"
+
     "math/rand"
     "net/http"
     "net/url"
-    // "strings"
     "encoding/json"
     "os/exec"
     "time"
-    "log"
 
     "errors"
 )
@@ -146,8 +146,8 @@ func IndexGit(src *common.CodeSource, s sessions.Session) (string, int) {
             http.StatusNotFound
     }
 
-    id  := common.UpdateStatus(src, common.CodeSourceStatusWorking)
-    if id == nil {
+    id, err := common.InsertSource(src, common.CodeSourceStatusWorking)
+    if err != nil {
         return WarningPacket("Internal error").Json(),
             http.StatusInternalServerError
     }
@@ -167,7 +167,7 @@ func IndexGit(src *common.CodeSource, s sessions.Session) (string, int) {
             http.StatusInternalServerError
     }
 
-    go redisPubSub(id.Hex())
+    go redisPubSub(id)
 
     res := Packet{
         Action: "queued",
@@ -178,8 +178,8 @@ func IndexGit(src *common.CodeSource, s sessions.Session) (string, int) {
     return res.Json(), http.StatusOK
 }
 
-func redisPubSub(id string) {
-    pubsub, _ := common.Rds.Subscribe("indexing:" + id)
+func redisPubSub(id bson.ObjectId) {
+    pubsub, _ := common.Rds.Subscribe("indexing:" + id.Hex())
     time.Sleep(time.Second)
     defer pubsub.Close()
     for {
@@ -190,9 +190,11 @@ func redisPubSub(id string) {
 
         data := Packet {}
         err  = json.Unmarshal([]byte(msg.Payload), &data)
-        log.Print("Got message. Ok? ", err == nil)
         if err == nil {
-            if clients, ok := wsMap[id]; ok {
+            if data.Action == "finished" {
+                common.UpdateStatus(id, common.CodeSourceStatusDone)
+            }
+            if clients, ok := wsMap[id.Hex()]; ok {
                 for _, c := range clients {
                     data.Send(c.conn)
                 }

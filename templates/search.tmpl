@@ -108,8 +108,9 @@
 
         </div>
     </div>
-    <div class="ui raised segment" style="display: none">
-        <div class="ui inverted left icon input" id="query-input-container">
+
+    <div class="ui raised segment {{ if ne .SourceStatus "done" }}hidden{{end}}" id="query-input-container">
+        <div class="ui fluid inverted left icon input">
             <input type="text" placeholder="Query" id="query-input">
             <i class="search icon"></i>
         </div>

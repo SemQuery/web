@@ -103,15 +103,20 @@ func GetCodeSourceStatus(src *CodeSource) CodeSourceStatus {
     }
 }
 
-func UpdateStatus(src *CodeSource, status CodeSourceStatus) *bson.ObjectId {
-    query  := src.ToBson()
-    update := bson.M { "$set": bson.M { "status": status } }
+func InsertSource(src *CodeSource, status CodeSourceStatus) (bson.ObjectId, error) {
+    doc  := src.ToBson()
+    doc["status"] = status
 
-    info, _ :=  CodeSourceColl.Upsert(query, update)
-    if info != nil {
-        id := info.UpsertedId.(bson.ObjectId)
-        return &id
-    } else {
-        return nil
-    }
+    id := bson.NewObjectId()
+    doc["_id"] = id
+
+    err :=  CodeSourceColl.Insert(doc)
+
+    return id, err
+}
+
+func UpdateStatus(id bson.ObjectId, status CodeSourceStatus) error {
+    update := bson.M{"status": status}
+
+    return CodeSourceColl.UpdateId(id, update)
 }

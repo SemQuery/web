@@ -10,6 +10,8 @@ import (
 type config struct {
     WebAddr string `json:"web_addr"`
 
+    SessionsSecret string `json:"sessions_secret"`
+
     DBAddr string `json:"db_addr"`
     DBName string `json:"db_name"`
     DBUser string `json:"db_user"`

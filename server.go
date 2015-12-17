@@ -80,7 +80,10 @@ func main() {
     initS3()
 
     m := martini.Classic()
-    m.Use(sessions.Sessions("semquery", sessions.NewCookieStore([]byte("secret"))))
+
+    store := sessions.NewCookieStore([]byte(common.Config.SessionsSecret))
+    m.Use(sessions.Sessions("semquery", store))
+
     m.Use(render.Renderer(render.Options {
         Layout: "layout",
     }))

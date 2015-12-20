@@ -23,6 +23,10 @@ var App = App || {pages: {}};
                 $('#indexing-phase-cloning .indexing-phase').addClass('done');
                 $('#indexing-phase-indexing').slideToggle();
             }
+            break;
+        case "finished":
+            $('#query-input-container').removeClass('hidden');
+            break;
         }
     }
 
@@ -38,7 +42,7 @@ var App = App || {pages: {}};
         $("#bar").attr("style", "width:" + percent + "%");
         $("#progress-label").text(percent + "%");
         if (percent == "100") {
-            $("$progress-bar").addClass("success");
+            $("#progress-bar").addClass("success");
         }
     }
 

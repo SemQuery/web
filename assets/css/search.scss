@@ -97,6 +97,10 @@ div.indexing-phase.done .phase-indicator {
     font-size: 1.5em;
 }
 
+#query-input-container.hidden {
+    display: none;
+}
+
 #query-input {
     font-family: Consolas !important;
 }

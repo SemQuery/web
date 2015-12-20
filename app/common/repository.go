@@ -74,14 +74,14 @@ type CodeSource struct {
     Git *GitSource
 }
 
-func (r *CodeSource) ToBson() bson.M {
+func (cs *CodeSource) ToBson() bson.M {
     b := bson.M {}
-    if r.Git != nil {
+    if cs.Git != nil {
         g := bson.M{
-            "url": r.Git.URL.String(),
+            "url": cs.Git.URL.String(),
         }
-        if r.Git.IsGitHub() {
-            user, repo := r.Git.GitHubFormat()
+        if cs.Git.IsGitHub() {
+            user, repo := cs.Git.GitHubFormat()
             g["github_user"] = user
             g["github_repo"] = repo
         }
@@ -90,8 +90,32 @@ func (r *CodeSource) ToBson() bson.M {
     return b
 }
 
+func ToFlatDocument(doc bson.M) (flat bson.M) {
+    flat = bson.M{}
+    for k, v := range doc {
+        switch v.(type) {
+        case bson.M:
+            toFlatDocument(flat, v.(bson.M), k)
+        default:
+            flat[k] = v
+        }
+    }
+    return
+}
+
+func toFlatDocument(root, current bson.M, path string) {
+    for k, v := range current {
+        switch v.(type) {
+        case bson.M:
+            toFlatDocument(root, v.(bson.M), k)
+        default:
+            root[path + "." + k] = v
+        }
+    }
+}
+
 func GetCodeSourceStatus(src *CodeSource) CodeSourceStatus {
-    doc := src.ToBson()
+    doc := ToFlatDocument(src.ToBson())
 
     var res bson.M
     err := CodeSourceColl.Find(doc).One(&res)
@@ -116,7 +140,9 @@ func InsertSource(src *CodeSource, status CodeSourceStatus) (bson.ObjectId, erro
 }
 
 func UpdateStatus(id bson.ObjectId, status CodeSourceStatus) error {
-    update := bson.M{"status": status}
+    update := bson.M{
+        "$set": bson.M{"status": status},
+    }
 
     return CodeSourceColl.UpdateId(id, update)
 }
